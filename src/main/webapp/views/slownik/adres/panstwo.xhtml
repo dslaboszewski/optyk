@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE composition PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                template="../.././szablonAplikacji.xhtml"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+    <ui:define name="content">    
+
+        <h:form id="formDataTablePan">                           
+            <p:commandButton id="btnInsert" value="Dodaj państwo (CTRL + Q)" onclick="PF('dlgDodajPanstwo').show();" icon="ui-icon-plus" title="Dodaj państwo" style="margin: 0 auto; margin-bottom: 10px; display: block; width: 20%; height: 45px;"/>
+            
+            <p:hotkey bind="ctrl+q" handler="PF('dlgDodajPanstwo').show();" />
+
+            <p:dataTable id="panstwa" 
+                         var="panstwo" 
+                         value="#{panstwoBean.lista}" 
+                         filteredValue="#{panstwoBean.filteredPanstwa}"
+                         widgetVar="panstwoTable"
+                         rowIndexVar="index"
+                         stickyHeader="false"
+                         rows="20"
+                         paginator="true"
+                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                         paginatorPosition="bottom"
+                         currentPageReportTemplate="Rekordy {startRecord}-{endRecord} z {totalRecords}"
+                         rowsPerPageTemplate="10,20,30,50,100"
+                         emptyMessage="Nie znaleziono rekordów">           
+
+                <f:facet name="header">
+                    <h:outputText value="Słownik państw" style="font-size: large;" />
+                </f:facet>
+
+                <p:column headerText="Lp." style="width: 50px;">
+                    <h:outputText value="#{index + 1}" />
+                </p:column>
+                <p:column headerText="Id" filterBy="#{panstwo.id}" filterMatchMode="contains" style="width: 100px;">
+                    <h:outputText value="#{panstwo.id}" />
+                </p:column>                                
+                <p:column headerText="Nazwa" filterBy="#{panstwo.nazwa}" filterMatchMode="contains" filterStyle="width: 300px;">
+                    <h:outputText id="nazwa" value="#{panstwo.nazwa}" />
+                </p:column>                      
+                <p:column headerText="Aktualizuj" style="width: 70px; text-align: center">
+                    <p:commandButton id="btnUpdate" update=":formUpdate, :dlgPanstwoUpdate" oncomplete="PF('dlgPanstwoUpdate').show()" icon="ui-icon-refresh" title="Aktualizacja państwa">
+                        <f:setPropertyActionListener value="#{panstwo}" target="#{panstwoBean.selectedPanstwo}" />
+                    </p:commandButton>
+                </p:column>
+            </p:dataTable>
+        </h:form>
+
+        <p:dialog header="Dodaj państwo" id="dlgDodajPanstwo" widgetVar="dlgDodajPanstwo" appendTo="@(body)" showEffect="explode" hideEffect="clip" width="400" height="200">
+            <h:form id="formInsert">  
+                <p:tabView>
+                    <p:tab title="Dane">
+                        <p:panelGrid columns="2">                                                       
+                            <p:outputLabel for="nazwa" value="Nazwa:" />
+                            <p:inputText id="nazwa" value="#{panstwoBean.panstwo.nazwa}" required="true" />  
+                        </p:panelGrid>
+                    </p:tab>
+                </p:tabView>
+                <p:separator/>
+                <p:commandButton value="Zapisz" id="zapisz" actionListener="#{panstwoBean.btnCreatePanstwo}" update=":formDataTablePan:panstwa, :msgs" oncomplete="hideDialogOnSuccess(args, 'dlgDodajPanstwo', 'panstwoTable');" icon="ui-icon-circle-plus" ajax="true" />
+                <p:commandButton value="Anuluj" id="anuluj" onclick="PF('dlgDodajPanstwo').hide()" styleClass="ui-confirmdialog-no" icon="ui-icon-close"/>                 
+            </h:form>
+        </p:dialog>
+
+        <p:dialog header="Aktualizacja państwa" id="dlgPanstwoUpdate" widgetVar="dlgPanstwoUpdate" appendTo="@(body)" showEffect="explode" hideEffect="clip" width="400" height="200">
+            <h:form id="formUpdate">  
+                <p:tabView>
+                    <p:tab title="Dane">
+                        <p:panelGrid columns="2">      
+                            <p:outputLabel for="id" value="Id:" />
+                            <p:inputText id="id" value="#{panstwoBean.selectedPanstwo.id}" required="false" disabled="true"/>
+
+                            <p:outputLabel for="nazwa" value="Nazwa:" />
+                            <p:inputText id="nazwa" value="#{panstwoBean.selectedPanstwo.nazwa}" required="true" />  
+                        </p:panelGrid>
+                    </p:tab>
+                </p:tabView>
+                <p:separator/>
+                <p:commandButton value="Zapisz" id="zapisz_upd" actionListener="#{panstwoBean.btnUpdatePanstwo}" oncomplete="hideDialogOnSuccess(args, 'dlgPanstwoUpdate', 'panstwoTable');" update=":formDataTablePan:panstwa, :msgs" icon="ui-icon-circle-plus" ajax="true" />
+                <p:commandButton value="Anuluj" id="anuluj_upd" onclick="PF('dlgPanstwoUpdate').hide()" styleClass="ui-confirmdialog-no" icon="ui-icon-close"/>                 
+            </h:form>
+        </p:dialog>      
+
+    </ui:define>
+</ui:composition>

@@ -1,0 +1,802 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE composition PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                template="./../szablonAplikacji.xhtml"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+    <ui:define name="content">   
+
+        <h:form id="formDataTable">                           
+            <p:commandButton id="btnInsert" widgetVar="varBtnInsert" value="Dodaj sprzedaż produktu (CTRL + Q)" action="#{sprzedazBean.setOperacja('I')}" oncomplete="PF('dlgDodajSprzedaz').show();" update=":formInsert" icon="ui-icon-plus" title="Dodaj sprzedaż" style="margin: 0 auto; margin-bottom: 10px; display: block; width: 20%; height: 45px;"/>
+            
+            <p:hotkey bind="ctrl+q" handler="PF('varBtnInsert').jq.click();" />
+            
+            <p:remoteCommand name="clearAttributesRC" actionListener="#{sprzedazBean.clearAttributes}" />            
+
+            <p:dataTable id="sprzedaze" 
+                         var="sprzedaz" 
+                         value="#{sprzedazBean.sprzedaze}" 
+                         filteredValue="#{sprzedazBean.filteredSprzedaze}"
+                         widgetVar="sprzedazTable"
+                         rowIndexVar="index"
+                         stickyHeader="false"
+                         rows="20"
+                         sortBy="#{sprzedazBean.dtSprzed}"
+                         paginator="true"
+                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                         paginatorPosition="bottom"
+                         currentPageReportTemplate="Rekordy {startRecord}-{endRecord} z {totalRecords}"
+                         rowsPerPageTemplate="10,20,30,50,100"
+                         emptyMessage="Nie znaleziono rekordów">           
+
+                <f:facet name="header">
+                    <h:outputText value="Dziennik sprzedaży produktów [#{sprzedazBean.kartotekaSprzedazNaglowek}]" style="font-size: large;" />
+                </f:facet>
+
+                <p:column headerText="Lp." style="width: 50px;">
+                    <h:outputText value="#{index + 1}" />
+                </p:column>
+                <p:column headerText="Id" filterBy="#{sprzedaz.id}" filterMatchMode="contains" style="width: 100px;">
+                    <h:outputText value="#{sprzedaz.id}" />
+                </p:column>                                
+                <p:column headerText="Klient" filterBy="#{sprzedaz.klient.etykieta}" filterMatchMode="contains" filterStyle="width: 200px;">
+                    <h:outputText value="#{sprzedaz.klient.etykieta}" />
+                </p:column>   
+                <!--
+                <p:column headerText="Rozstaw źrenic [mm]" filterBy="#{sprzedaz.rozstawZrenic}" filterMatchMode="contains">
+                    <h:outputText value="#{sprzedaz.rozstawZrenic}" />
+                </p:column>  
+                -->
+                <p:column headerText="Sprzedawca" filterBy="#{sprzedaz.sprzedawca.etykieta}" filterMatchMode="contains" filterStyle="width: 200px;">
+                    <h:outputText value="#{sprzedaz.sprzedawca.etykieta}" />
+                </p:column>   
+                <p:column headerText="Salon" filterBy="#{sprzedaz.zaklad}" filterMatchMode="exact">
+                    <f:facet name="filter">                        
+                        <p:selectOneMenu id="zaklad" value="#{sprzedazBean.sprzedaz.zaklad}" onchange="PF('sprzedazTable').filter()">
+                            <f:converter converterId="zakladConverter" />
+                            <f:selectItem itemLabel="Wszystkie" itemValue="#{null}" noSelectionOption="true" />
+                            <f:selectItems value="#{zakladBean.lista}" var="zaklad" itemValue="#{zaklad}" itemLabel="#{zaklad.nazwa}" />
+                        </p:selectOneMenu>   
+                    </f:facet>
+                    <h:outputText value="#{sprzedaz.zaklad.nazwa}" />
+                </p:column>   
+                <p:column headerText="Data sprzedaży" filterBy="#{sprzedaz.dataSprzedazy}" filterFunction="#{sprzedazBean.filterByDataSprzed}">
+                    <f:facet name="filter">
+                        <p:calendar widgetVar="calDataOd" placeholder="Od:" showButtonPanel="true" navigator="false" locale="pl"  pattern="dd-MM-yyyy HH:mm:ss">
+                            <p:ajax event="dateSelect" oncomplete="PF('sprzedazTable').filter()" update="formDataTable"/>
+                            <p:ajax event="change" oncomplete="PF('sprzedazTable').filter()" update="formDataTable"/>
+                        </p:calendar>
+                    </f:facet>             
+                    <h:outputText value="#{sprzedaz.dataSprzedazy}" >
+                        <f:convertDateTime type="date" timeZone="Europe/Warsaw" pattern="dd-MM-yyyy HH:mm:ss"/>
+                    </h:outputText>                    
+                </p:column>         
+                <!--
+                <p:column headerText="Sposób płatności" filterBy="#{sprzedaz.sposobPlatnosci}" filterMatchMode="exact">
+                    <f:facet name="filter">                        
+                        <p:selectOneMenu id="sp" value="#{sprzedazBean.sprzedaz.sposobPlatnosci}" onchange="PF('sprzedazTable').filter()">
+                            <f:converter converterId="sposobPlatnosciConverter" />
+                            <f:selectItem itemLabel="Wszystkie" itemValue="#{null}" noSelectionOption="true" />
+                            <f:selectItems value="#{sposobPlatnosciBean.lista}" var="sp" itemValue="#{sp}" itemLabel="#{sp.nazwa}" />
+                        </p:selectOneMenu>   
+                    </f:facet>
+                    <h:outputText value="#{sprzedaz.sposobPlatnosci.nazwa}" />
+                </p:column>   
+                -->
+                <p:column headerText="Producent oprawy" filterBy="#{sprzedaz.oprawaProducent}" filterMatchMode="exact">
+                    <f:facet name="filter">                        
+                        <p:selectOneMenu id="op" value="#{sprzedazBean.sprzedaz.oprawaProducent}" onchange="PF('sprzedazTable').filter()">
+                            <f:converter converterId="oprawaProducentConverter" />
+                            <f:selectItem itemLabel="Wszyscy" itemValue="#{null}" noSelectionOption="true" />
+                            <f:selectItems value="#{oprawaProducentBean.lista}" var="op" itemValue="#{op}" itemLabel="#{op.nazwa}" />
+                        </p:selectOneMenu>   
+                    </f:facet>
+                    <h:outputText value="#{sprzedaz.oprawaProducent.nazwa}" />
+                </p:column>    
+                <!--
+                <p:column headerText="Opis oprawy" filterBy="#{sprzedaz.oprawaOpis}" filterMatchMode="contains">
+                    <h:outputText value="#{sprzedaz.oprawaOpis}" />
+                </p:column> 
+                -->
+                <p:column headerText="Producent szkieł" filterBy="#{sprzedaz.szklaProducent}" filterMatchMode="exact">
+                    <f:facet name="filter">                        
+                        <p:selectOneMenu id="szp" value="#{sprzedazBean.sprzedaz.szklaProducent}" onchange="PF('sprzedazTable').filter()">
+                            <f:converter converterId="szklaProducentConverter" />
+                            <f:selectItem itemLabel="Wszyscy" itemValue="#{null}" noSelectionOption="true" />
+                            <f:selectItems value="#{szklaProducentBean.lista}" var="szp" itemValue="#{szp}" itemLabel="#{szp.nazwa}" />
+                        </p:selectOneMenu>   
+                    </f:facet>
+                    <h:outputText value="#{sprzedaz.szklaProducent.nazwa}" />
+                </p:column>   
+                <!--
+                <p:column headerText="Opis szkieł" filterBy="#{sprzedaz.szklaOpis}" filterMatchMode="contains">
+                    <h:outputText value="#{sprzedaz.szklaOpis}" />
+                </p:column>     
+                -->
+                <p:column headerText="Producent soczewek" filterBy="#{sprzedaz.soczewkiProducent}" filterMatchMode="exact">
+                    <f:facet name="filter">                        
+                        <p:selectOneMenu id="sop" value="#{sprzedazBean.sprzedaz.soczewkiProducent}" onchange="PF('sprzedazTable').filter()">
+                            <f:converter converterId="soczewkiProducentConverter" />
+                            <f:selectItem itemLabel="Wszyscy" itemValue="#{null}" noSelectionOption="true" />
+                            <f:selectItems value="#{soczewkiProducentBean.lista}" var="sop" itemValue="#{sop}" itemLabel="#{sop.nazwa}" />
+                        </p:selectOneMenu>   
+                    </f:facet>
+                    <h:outputText value="#{sprzedaz.soczewkiProducent.nazwa}" />
+                </p:column> 
+                <!--
+                <p:column headerText="Opis soczewek" filterBy="#{sprzedaz.soczewkiOpis}" filterMatchMode="contains">
+                    <h:outputText value="#{sprzedaz.soczewkiOpis}" />
+                </p:column>  
+                -->
+                <p:column headerText="Inny produkt" filterBy="#{sprzedaz.innyTowar}" filterMatchMode="exact">
+                    <f:facet name="filter">    
+                        <p:selectOneMenu id="inny_produkt" value="#{sprzedazBean.sprzedaz.innyTowar}" onchange="PF('sprzedazTable').filter();">
+                            <f:converter converterId="innyTowarConverter" />
+                            <f:selectItem itemLabel="Wszystkie" itemValue="#{null}" noSelectionOption="true" />
+                            <f:selectItems value="#{innyTowarBean.lista}" var="inny_towar" itemValue="#{inny_towar}" itemLabel="#{inny_towar.nazwa}" />
+                        </p:selectOneMenu>  
+                    </f:facet>
+                    <h:outputText value="#{sprzedaz.innyTowar.nazwa}" />
+                </p:column>  
+                <p:column headerText="Wartośc sprzedaży" filterBy="#{sprzedaz.wartoscSprzedazy}" filterMatchMode="contains" filterStyle="width: 150px;">
+                    <h:outputText value="#{sprzedaz.wartoscSprzedazy}" />
+                </p:column>                    
+                <p:column headerText="Aktualizuj" style="width: 70px; text-align: center">
+                    <p:commandButton id="btnUpdate" action="#{sprzedazBean.setOperacja('U')}" update=":formUpdate" oncomplete="PF('dlgSprzedazUpdate').show()" icon="ui-icon-refresh" title="Aktualizacja sprzedaży">
+                        <f:setPropertyActionListener value="#{sprzedaz}" target="#{sprzedazBean.selectedSprzedaz}"/>
+                    </p:commandButton>
+                </p:column>
+                <p:column headerText="Usuń" style="width: 40px; text-align: center">
+                    <p:commandButton id="btnDelete" update=":formDelete" oncomplete="PF('dlgSprzedazDelete').show()" icon="ui-icon-close" title="Usunięcie sprzedaży">
+                        <f:setPropertyActionListener value="#{sprzedaz}" target="#{sprzedazBean.selectedSprzedaz}"/>
+                    </p:commandButton>
+                </p:column>
+
+                <p:summaryRow id="sumRoww">
+                    <p:column colspan="10" style="text-align:right">
+                        <h:outputText value="Razem:" />
+                    </p:column>
+                    <p:column id="colSR">
+                        <h:outputText id="wartosc_sprzed_razem" value="#{sprzedazBean.wartoscSprzedazyRazem}">
+                            <!-- <f:convertNumber type="currency" currencySymbol="$" /> -->
+                        </h:outputText>
+                    </p:column>
+                </p:summaryRow>
+
+                <!--
+                <p:columnGroup type="footer">
+                    <p:row>
+                        <p:column colspan="6" style="text-align:right" footerText="Razem:" />
+                        <p:column footerText="5" />
+                    </p:row>
+                </p:columnGroup>
+                -->
+            </p:dataTable>
+        </h:form>
+
+        <p:dialog header="Dodaj sprzedaż" id="dlgDodajSprzedaz" widgetVar="dlgDodajSprzedaz" appendTo="@(body)" showEffect="explode" hideEffect="clip" width="800" height="500">
+            <h:form id="formInsert">
+                <p:tabView id="tv">
+                    <p:tab title="Dane">
+                        <p:panelGrid id="pg" columns="2">      
+                            <p:outputLabel for="klient" value="Klient:" />
+                            <h:panelGroup>                                
+                                <p:inputText id="klient" value="#{sprzedazBean.sprzedaz.klient.etykieta}" disabled="true" required="false"/>                                
+                                <p:commandButton id="btnKlienci" type="button" onclick="PF('dlgKlienci').show();" icon="ui-icon-document" />
+                            </h:panelGroup>
+
+                            <p:outputLabel for="zaklad" value="Salon:" />
+                            <p:selectOneMenu id="zaklad" value="#{sprzedazBean.sprzedaz.zaklad}" required="true">
+                                <f:converter converterId="zakladConverter" />
+                                <f:selectItem itemLabel="Wybierz" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{zakladBean.lista}" var="zaklad" itemValue="#{zaklad}" itemLabel="#{zaklad.nazwa}" />
+                            </p:selectOneMenu>     
+
+                            <p:outputLabel for="sprzedawca" value="Sprzedawca:" />
+                            <p:selectOneMenu id="sprzedawca" value="#{sprzedazBean.sprzedaz.sprzedawca}" required="true">
+                                <f:converter converterId="uzytkownikConverter" />
+                                <f:selectItem itemLabel="Wybierz" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{loginBean.uzytkownicy}" var="uzytkownik" itemValue="#{uzytkownik}" itemLabel="#{uzytkownik.etykieta}" />
+                            </p:selectOneMenu>
+
+                            <p:outputLabel for="data_sprzedazy" value="Data sprzedaży:" />
+                            <p:calendar id="data_sprzedazy" widgetVar="calDataSprzedazy" value="#{sprzedazBean.sprzedaz.dataSprzedazy}" required="true" showOn="button" showButtonPanel="false" navigator="false" locale="pl" timeZone="Europe/Warsaw" pattern="dd-MM-yyyy HH:mm:ss" />                            
+
+                            <p:outputLabel for="sposob_plat" value="Sposób płatności:" />
+                            <p:selectOneMenu id="sposob_plat" value="#{sprzedazBean.sprzedaz.sposobPlatnosci}" required="true">
+                                <f:converter converterId="sposobPlatnosciConverter" />
+                                <f:selectItem itemLabel="Wybierz" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{sposobPlatnosciBean.lista}" var="sposob_plat" itemValue="#{sposob_plat}" itemLabel="#{sposob_plat.nazwa}" />
+                            </p:selectOneMenu>  
+
+                            <p:outputLabel for="wartosc_sprzed" value="Wartość sprzedaży [PLN]:" />
+                            <p:inputNumber id="wartosc_sprzed" value="#{sprzedazBean.sprzedaz.wartoscSprzedazy}" minValue="0" maxValue="99999" required="true" />  
+                        </p:panelGrid>
+                    </p:tab>
+                    <p:tab title="Recepta">                        
+                        <p:panelGrid columns="5" styleClass="receptaPanelGrid">      
+                            <p:outputLabel value="Typ recepty: " />
+
+                            <h:panelGroup>  
+                                <p:selectBooleanCheckbox value="#{sprzedazBean.sprzedaz.okulary}" />
+                                <p:outputLabel value="Okulary" style="padding-left: 5px"/>
+                            </h:panelGroup>  
+
+                            <h:panelGroup>  
+                                <p:selectBooleanCheckbox value="#{sprzedazBean.sprzedaz.soczewkiKontaktowe}" />
+                                <p:outputLabel value="Soczewki kontaktowe" style="padding-left: 5px"/>
+                            </h:panelGroup>  
+                        </p:panelGrid>          
+
+                        <p:panelGrid styleClass="receptaPanelGrid">
+                            <p:row>
+                                <p:column style="width: 20px;">
+                                    <p:outputLabel value="" />
+                                </p:column>
+                                <p:column style="width: 20px;">
+                                    <p:outputLabel value="" />
+                                </p:column>
+                                <p:column>
+                                    <p:outputLabel value="Sfera" />
+                                </p:column>
+                                <p:column>
+                                    <p:outputLabel value="Cyl" />
+                                </p:column>
+                                <p:column>
+                                    <p:outputLabel value="Oś" />
+                                </p:column>
+                                <p:column>
+                                    <p:outputLabel value="Addycja" />
+                                </p:column>
+                                <p:column>
+                                    <p:outputLabel value="Pd" />
+                                </p:column>
+                                <p:column>
+                                    <p:outputLabel value="Pryzma" />
+                                </p:column>
+                                <p:column>
+                                    <p:outputLabel value="Baza" />
+                                </p:column>
+                                <p:column>
+                                    <p:outputLabel value="H" />
+                                </p:column>                                
+                            </p:row>
+
+                            <p:row>
+                                <p:column rowspan="2">
+                                    <p:outputLabel value="D" />
+                                </p:column>
+                                <p:column>
+                                    <p:outputLabel value="OP" />
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOpSfera" value="#{sprzedazBean.sprzedaz.DOpSfera}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOpCyl" value="#{sprzedazBean.sprzedaz.DOpCyl}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOpOs" value="#{sprzedazBean.sprzedaz.DOpOs}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOpAddycja" value="#{sprzedazBean.sprzedaz.DOpAddycja}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOpPd" value="#{sprzedazBean.sprzedaz.DOpPd}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOpPryzma" value="#{sprzedazBean.sprzedaz.DOpPryzma}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOpBaza" value="#{sprzedazBean.sprzedaz.DOpBaza}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOpH" value="#{sprzedazBean.sprzedaz.DOpH}" required="false" style="width: 50px;"/>
+                                </p:column>                     
+                            </p:row>
+
+                            <p:row>
+                                <p:column>
+                                    <p:outputLabel value="OL" />
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOlSfera" value="#{sprzedazBean.sprzedaz.DOlSfera}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOlCyl" value="#{sprzedazBean.sprzedaz.DOlCyl}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOlOs" value="#{sprzedazBean.sprzedaz.DOlOs}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOlAddycja" value="#{sprzedazBean.sprzedaz.DOlAddycja}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOlPd" value="#{sprzedazBean.sprzedaz.DOlPd}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOlPryzma" value="#{sprzedazBean.sprzedaz.DOlPryzma}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOlBaza" value="#{sprzedazBean.sprzedaz.DOlBaza}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOlH" value="#{sprzedazBean.sprzedaz.DOlH}" required="false" style="width: 50px;"/>
+                                </p:column>                     
+                            </p:row>
+
+                            <p:row>
+                                <p:column rowspan="2">
+                                    <p:outputLabel value="B" />
+                                </p:column>
+                                <p:column>
+                                    <p:outputLabel value="OP" />
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOpSfera" value="#{sprzedazBean.sprzedaz.BOpSfera}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOpCyl" value="#{sprzedazBean.sprzedaz.BOpCyl}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOpOs" value="#{sprzedazBean.sprzedaz.BOpOs}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOpAddycja" value="#{sprzedazBean.sprzedaz.BOpAddycja}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOpPd" value="#{sprzedazBean.sprzedaz.BOpPd}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOpPryzma" value="#{sprzedazBean.sprzedaz.BOpPryzma}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOpBaza" value="#{sprzedazBean.sprzedaz.BOpBaza}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOpH" value="#{sprzedazBean.sprzedaz.BOpH}" required="false" style="width: 50px;"/>
+                                </p:column>                     
+                            </p:row>
+
+                            <p:row>
+                                <p:column>
+                                    <p:outputLabel value="OL" />
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOlSfera" value="#{sprzedazBean.sprzedaz.BOlSfera}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOlCyl" value="#{sprzedazBean.sprzedaz.BOlCyl}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOlOs" value="#{sprzedazBean.sprzedaz.BOlOs}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOlAddycja" value="#{sprzedazBean.sprzedaz.BOlAddycja}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOlPd" value="#{sprzedazBean.sprzedaz.BOlPd}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOlPryzma" value="#{sprzedazBean.sprzedaz.BOlPryzma}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOlBaza" value="#{sprzedazBean.sprzedaz.BOlBaza}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOlH" value="#{sprzedazBean.sprzedaz.BOlH}" required="false" style="width: 50px;"/>
+                                </p:column>                     
+                            </p:row>
+                        </p:panelGrid>
+
+                        <p:panelGrid columns="2" styleClass="receptaPanelGrid">   
+                            <p:outputLabel for="rozstaw_zrenic" value="Rozstaw źrenic [mm]:" />
+                            <p:inputNumber id="rozstaw_zrenic" value="#{sprzedazBean.sprzedaz.rozstawZrenic}" minValue="0" maxValue="80" required="false"/>  
+                        </p:panelGrid>                        
+                    </p:tab>
+                    <p:tab title="Oprawa">
+                        <p:panelGrid columns="2">
+                            <p:outputLabel for="oprawa_producent" value="Producent oprawy:" />
+                            <p:selectOneMenu id="oprawa_producent" value="#{sprzedazBean.sprzedaz.oprawaProducent}" required="false">
+                                <f:converter converterId="oprawaProducentConverter" />
+                                <f:selectItem itemLabel="Wybierz" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{oprawaProducentBean.lista}" var="oprawa_producent" itemValue="#{oprawa_producent}" itemLabel="#{oprawa_producent.nazwa}" />
+                            </p:selectOneMenu>  
+
+                            <p:outputLabel for="oprawa_opis" value="Opis oprawy:" />                            
+                            <p:inputTextarea id="oprawa_opis" value="#{sprzedazBean.sprzedaz.oprawaOpis}" required="false" rows="5" cols="30" autoResize="false" />
+                        </p:panelGrid>
+                    </p:tab>
+                    <p:tab title="Szkła">
+                        <p:panelGrid columns="2">
+                            <p:outputLabel for="szkla_producent" value="Producent szkieł:" />
+                            <p:selectOneMenu id="szkla_producent" value="#{sprzedazBean.sprzedaz.szklaProducent}" required="false">
+                                <f:converter converterId="szklaProducentConverter" />
+                                <f:selectItem itemLabel="Wybierz" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{szklaProducentBean.lista}" var="szkla_producent" itemValue="#{szkla_producent}" itemLabel="#{szkla_producent.nazwa}" />
+                            </p:selectOneMenu>  
+
+                            <p:outputLabel for="szkla_opis" value="Opis szkieł" />                            
+                            <p:inputTextarea id="szkla_opis" value="#{sprzedazBean.sprzedaz.szklaOpis}" required="false" rows="5" cols="30" autoResize="false" />
+                        </p:panelGrid>
+                    </p:tab>
+                    <p:tab title="Soczewki">
+                        <p:panelGrid columns="2">
+                            <p:outputLabel for="soczewki_producent" value="Producent soczewek:" />
+                            <p:selectOneMenu id="soczewki_producent" value="#{sprzedazBean.sprzedaz.soczewkiProducent}" required="false">
+                                <f:converter converterId="soczewkiProducentConverter" />
+                                <f:selectItem itemLabel="Wybierz" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{soczewkiProducentBean.lista}" var="soczewki_producent" itemValue="#{soczewki_producent}" itemLabel="#{soczewki_producent.nazwa}" />
+                            </p:selectOneMenu>  
+
+                            <p:outputLabel for="soczewki_opis" value="Opis soczewek" />                            
+                            <p:inputTextarea id="soczewki_opis" value="#{sprzedazBean.sprzedaz.soczewkiOpis}" required="false" rows="5" cols="30" autoResize="false" />
+                        </p:panelGrid>
+                    </p:tab>
+                    <p:tab title="Inny produkt">
+                        <p:panelGrid columns="2">
+                            <p:outputLabel for="inny_produkt" value="Inny produkt:" />
+                            <p:selectOneMenu id="inny_produkt" value="#{sprzedazBean.sprzedaz.innyTowar}" required="false">
+                                <f:converter converterId="innyTowarConverter" />
+                                <f:selectItem itemLabel="Wybierz" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{innyTowarBean.lista}" var="inny_towar" itemValue="#{inny_towar}" itemLabel="#{inny_towar.nazwa}" />
+                            </p:selectOneMenu>  
+
+                            <p:outputLabel for="inny_towar_opis" value="Opis innego produktu" />                            
+                            <p:inputTextarea id="inny_towar_opis" value="#{sprzedazBean.sprzedaz.innyTowarOpis}" required="false" rows="5" cols="30" autoResize="false" />                                                                                  
+                        </p:panelGrid>
+                    </p:tab>
+                </p:tabView>
+                <p:separator/>
+                <p:commandButton value="Zapisz" id="zapisz" actionListener="#{sprzedazBean.btnCreateSprzedaz}" oncomplete="hideDialogOnSuccess(args, 'dlgDodajSprzedaz', 'sprzedazTable');" update=":formDataTable, dlgDodajSprzedaz, :msgs" process="@form" icon="ui-icon-circle-plus" ajax="true" />
+                <p:commandButton value="Anuluj" id="anuluj" onclick="PF('dlgDodajSprzedaz').hide()" styleClass="ui-confirmdialog-no" icon="ui-icon-close"/>                               
+            </h:form>
+        </p:dialog>
+
+        <p:dialog header="Aktualizacja sprzedaży" widgetVar="dlgSprzedazUpdate" id="dialogSprzedazUpdate" appendTo="@(body)" showEffect="explode" hideEffect="clip" resizable="false" width="800" height="500">            
+            <h:form id="formUpdate">                  
+                <p:tabView>
+                    <p:tab title="Dane">
+                        <p:panelGrid columns="2">      
+                            <p:outputLabel for="id" value="Id:" />
+                            <p:inputText id="id" value="#{sprzedazBean.selectedSprzedaz.id}" required="false" disabled="true"/>
+
+                            <p:outputLabel for="klient" value="Klient:" />
+                            <h:panelGroup>                                
+                                <p:inputText id="klient" value="#{sprzedazBean.selectedSprzedaz.klient.etykieta}" required="false" disabled="true"/>                                
+                                <p:commandButton id="btnKlienci" type="button" onclick="PF('dlgKlienci').show();" icon="ui-icon-document" />
+                            </h:panelGroup>                                                                                                            
+
+                            <p:outputLabel for="zaklad" value="Salon:" />
+                            <p:selectOneMenu id="zaklad" value="#{sprzedazBean.selectedSprzedaz.zaklad}" required="true">
+                                <f:converter converterId="zakladConverter" />
+                                <f:selectItem itemLabel="Wybierz" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{zakladBean.lista}" var="zaklad" itemValue="#{zaklad}" itemLabel="#{zaklad.nazwa}" />
+                            </p:selectOneMenu>     
+
+                            <p:outputLabel for="sprzedawca" value="Sprzedawca:" />
+                                <p:selectOneMenu id="sprzedawca" value="#{sprzedazBean.selectedSprzedaz.sprzedawca}" required="true">
+                                <f:converter converterId="uzytkownikConverter" />
+                                <f:selectItem itemLabel="Wybierz" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{loginBean.uzytkownicy}" var="uzytkownik" itemValue="#{uzytkownik}" itemLabel="#{uzytkownik.etykieta}" />
+                            </p:selectOneMenu>
+
+                            <p:outputLabel for="data_sprzedazy" value="Data sprzedaży:" />
+                            <p:calendar id="data_sprzedazy" widgetVar="calDataSprzedazy" value="#{sprzedazBean.selectedSprzedaz.dataSprzedazy}" required="true" showOn="button" showButtonPanel="false" navigator="false" locale="pl" timeZone="Europe/Warsaw" pattern="dd-MM-yyyy HH:mm:ss" />                            
+
+                            <p:outputLabel for="sposob_plat" value="Sposób płatności:" />
+                            <p:selectOneMenu id="sposob_plat" value="#{sprzedazBean.selectedSprzedaz.sposobPlatnosci}" required="true">
+                                <f:converter converterId="sposobPlatnosciConverter" />
+                                <f:selectItem itemLabel="Wybierz" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{sposobPlatnosciBean.lista}" var="sposob_plat" itemValue="#{sposob_plat}" itemLabel="#{sposob_plat.nazwa}" />
+                            </p:selectOneMenu>  
+
+                            <p:outputLabel for="wartosc_sprzed" value="Wartość sprzedaży [PLN]:" />
+                            <p:inputNumber id="wartosc_sprzed" value="#{sprzedazBean.selectedSprzedaz.wartoscSprzedazy}" minValue="0" maxValue="99999" required="true" />  
+                        </p:panelGrid>
+                    </p:tab>
+                    <p:tab title="Recepta">                        
+                        <p:panelGrid columns="5" styleClass="receptaPanelGrid">      
+                            <p:outputLabel value="Typ recepty: " />
+
+                            <p:selectBooleanCheckbox value="#{sprzedazBean.selectedSprzedaz.okulary}" />
+                            <p:outputLabel value="Okulary" />
+
+                            <p:selectBooleanCheckbox value="#{sprzedazBean.selectedSprzedaz.soczewkiKontaktowe}" />
+                            <p:outputLabel value="Soczewki kontaktowe" />
+                        </p:panelGrid>          
+
+                        <p:panelGrid styleClass="receptaPanelGrid">
+                            <p:row>
+                                <p:column style="width: 20px;">
+                                    <p:outputLabel value="" />
+                                </p:column>
+                                <p:column style="width: 20px;">
+                                    <p:outputLabel value="" />
+                                </p:column>
+                                <p:column>
+                                    <p:outputLabel value="Sfera" />
+                                </p:column>
+                                <p:column>
+                                    <p:outputLabel value="Cyl" />
+                                </p:column>
+                                <p:column>
+                                    <p:outputLabel value="Oś" />
+                                </p:column>
+                                <p:column>
+                                    <p:outputLabel value="Addycja" />
+                                </p:column>
+                                <p:column>
+                                    <p:outputLabel value="Pd" />
+                                </p:column>
+                                <p:column>
+                                    <p:outputLabel value="Pryzma" />
+                                </p:column>
+                                <p:column>
+                                    <p:outputLabel value="Baza" />
+                                </p:column>
+                                <p:column>
+                                    <p:outputLabel value="H" />
+                                </p:column>                                
+                            </p:row>
+
+                            <p:row>
+                                <p:column rowspan="2">
+                                    <p:outputLabel value="D" />
+                                </p:column>
+                                <p:column>
+                                    <p:outputLabel value="OP" />
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOpSfera" value="#{sprzedazBean.selectedSprzedaz.DOpSfera}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOpCyl" value="#{sprzedazBean.selectedSprzedaz.DOpCyl}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOpOs" value="#{sprzedazBean.selectedSprzedaz.DOpOs}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOpAddycja" value="#{sprzedazBean.selectedSprzedaz.DOpAddycja}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOpPd" value="#{sprzedazBean.selectedSprzedaz.DOpPd}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOpPryzma" value="#{sprzedazBean.selectedSprzedaz.DOpPryzma}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOpBaza" value="#{sprzedazBean.selectedSprzedaz.DOpBaza}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOpH" value="#{sprzedazBean.selectedSprzedaz.DOpH}" required="false" style="width: 50px;"/>
+                                </p:column>                     
+                            </p:row>
+
+                            <p:row>
+                                <p:column>
+                                    <p:outputLabel value="OL" />
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOlSfera" value="#{sprzedazBean.selectedSprzedaz.DOlSfera}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOlCyl" value="#{sprzedazBean.selectedSprzedaz.DOlCyl}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOlOs" value="#{sprzedazBean.selectedSprzedaz.DOlOs}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOlAddycja" value="#{sprzedazBean.selectedSprzedaz.DOlAddycja}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOlPd" value="#{sprzedazBean.selectedSprzedaz.DOlPd}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOlPryzma" value="#{sprzedazBean.selectedSprzedaz.DOlPryzma}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOlBaza" value="#{sprzedazBean.selectedSprzedaz.DOlBaza}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="DOlH" value="#{sprzedazBean.selectedSprzedaz.DOlH}" required="false" style="width: 50px;"/>
+                                </p:column>                     
+                            </p:row>
+
+                            <p:row>
+                                <p:column rowspan="2">
+                                    <p:outputLabel value="B" />
+                                </p:column>
+                                <p:column>
+                                    <p:outputLabel value="OP" />
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOpSfera" value="#{sprzedazBean.selectedSprzedaz.BOpSfera}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOpCyl" value="#{sprzedazBean.selectedSprzedaz.BOpCyl}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOpOs" value="#{sprzedazBean.selectedSprzedaz.BOpOs}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOpAddycja" value="#{sprzedazBean.selectedSprzedaz.BOpAddycja}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOpPd" value="#{sprzedazBean.selectedSprzedaz.BOpPd}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOpPryzma" value="#{sprzedazBean.selectedSprzedaz.BOpPryzma}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOpBaza" value="#{sprzedazBean.selectedSprzedaz.BOpBaza}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOpH" value="#{sprzedazBean.selectedSprzedaz.BOpH}" required="false" style="width: 50px;"/>
+                                </p:column>                     
+                            </p:row>
+
+                            <p:row>
+                                <p:column>
+                                    <p:outputLabel value="OL" />
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOlSfera" value="#{sprzedazBean.selectedSprzedaz.BOlSfera}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOlCyl" value="#{sprzedazBean.selectedSprzedaz.BOlCyl}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOlOs" value="#{sprzedazBean.selectedSprzedaz.BOlOs}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOlAddycja" value="#{sprzedazBean.selectedSprzedaz.BOlAddycja}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOlPd" value="#{sprzedazBean.selectedSprzedaz.BOlPd}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOlPryzma" value="#{sprzedazBean.selectedSprzedaz.BOlPryzma}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOlBaza" value="#{sprzedazBean.selectedSprzedaz.BOlBaza}" required="false" style="width: 50px;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText id="BOlH" value="#{sprzedazBean.selectedSprzedaz.BOlH}" required="false" style="width: 50px;"/>
+                                </p:column>                     
+                            </p:row>
+                        </p:panelGrid>
+
+                        <p:panelGrid columns="2" styleClass="receptaPanelGrid">   
+                            <p:outputLabel for="rozstaw_zrenic" value="Rozstaw źrenic [mm]:" />
+                            <p:inputNumber id="rozstaw_zrenic" value="#{sprzedazBean.selectedSprzedaz.rozstawZrenic}" minValue="0" maxValue="80" required="false"/>  
+                        </p:panelGrid>                        
+                    </p:tab>
+                    <p:tab title="Oprawa">
+                        <p:panelGrid columns="2">
+                            <p:outputLabel for="oprawa_producent" value="Producent oprawy:" />
+                            <p:selectOneMenu id="oprawa_producent" value="#{sprzedazBean.selectedSprzedaz.oprawaProducent}" required="false">
+                                <f:converter converterId="oprawaProducentConverter" />
+                                <f:selectItem itemLabel="Wybierz" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{oprawaProducentBean.lista}" var="oprawa_producent" itemValue="#{oprawa_producent}" itemLabel="#{oprawa_producent.nazwa}" />
+                            </p:selectOneMenu>  
+
+                            <p:outputLabel for="oprawa_opis" value="Opis oprawy:" />                            
+                            <p:inputTextarea id="oprawa_opis" value="#{sprzedazBean.selectedSprzedaz.oprawaOpis}" required="false" rows="5" cols="30" autoResize="false" />
+                        </p:panelGrid>
+                    </p:tab>
+                    <p:tab title="Szkła">
+                        <p:panelGrid columns="2">
+                            <p:outputLabel for="szkla_producent" value="Producent szkieł:" />
+                            <p:selectOneMenu id="szkla_producent" value="#{sprzedazBean.selectedSprzedaz.szklaProducent}" required="false">
+                                <f:converter converterId="szklaProducentConverter" />
+                                <f:selectItem itemLabel="Wybierz" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{szklaProducentBean.lista}" var="szkla_producent" itemValue="#{szkla_producent}" itemLabel="#{szkla_producent.nazwa}" />
+                            </p:selectOneMenu>  
+
+                            <p:outputLabel for="szkla_opis" value="Opis szkieł" />                            
+                            <p:inputTextarea id="szkla_opis" value="#{sprzedazBean.selectedSprzedaz.szklaOpis}" required="false" rows="5" cols="30" autoResize="false" />
+                        </p:panelGrid>
+                    </p:tab>
+                    <p:tab title="Soczewki">
+                        <p:panelGrid columns="2">
+                            <p:outputLabel for="soczewki_producent" value="Producent soczewek:" />
+                            <p:selectOneMenu id="soczewki_producent" value="#{sprzedazBean.selectedSprzedaz.soczewkiProducent}" required="false">
+                                <f:converter converterId="soczewkiProducentConverter" />
+                                <f:selectItem itemLabel="Wybierz" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{soczewkiProducentBean.lista}" var="soczewki_producent" itemValue="#{soczewki_producent}" itemLabel="#{soczewki_producent.nazwa}" />
+                            </p:selectOneMenu>  
+
+                            <p:outputLabel for="soczewki_opis" value="Opis soczewek" />                            
+                            <p:inputTextarea id="soczewki_opis" value="#{sprzedazBean.selectedSprzedaz.soczewkiOpis}" required="false" rows="5" cols="30" autoResize="false" />
+                        </p:panelGrid>
+                    </p:tab>
+                    <p:tab title="Inny produkt">
+                        <p:panelGrid columns="2">
+                            <p:outputLabel for="inny_produkt" value="Inny produkt:" />
+                            <p:selectOneMenu id="inny_produkt" value="#{sprzedazBean.selectedSprzedaz.innyTowar}" required="false">
+                                <f:converter converterId="innyTowarConverter" />
+                                <f:selectItem itemLabel="Wybierz" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{innyTowarBean.lista}" var="inny_towar" itemValue="#{inny_towar}" itemLabel="#{inny_towar.nazwa}" />
+                            </p:selectOneMenu>  
+
+                            <p:outputLabel for="inny_towar_opis" value="Opis innego produktu" />                            
+                            <p:inputTextarea id="inny_towar_opis" value="#{sprzedazBean.selectedSprzedaz.innyTowarOpis}" required="false" rows="5" cols="30" autoResize="false" />                                                                                  
+                        </p:panelGrid>
+                    </p:tab>
+                </p:tabView>
+                <p:separator/>
+                <p:commandButton value="Zapisz" id="zapisz_upd" actionListener="#{sprzedazBean.btnUpdateSprzedaz}" oncomplete="hideDialogOnSuccess(args, 'dlgSprzedazUpdate', 'sprzedazTable');" update=":formDataTable, dialogSprzedazUpdate, :msgs" process="@form" icon="ui-icon-circle-plus" ajax="true" />
+                <p:commandButton value="Anuluj" id="anuluj_upd" onclick="PF('dlgSprzedazUpdate').hide()" styleClass="ui-confirmdialog-no" icon="ui-icon-close"/>                 
+            </h:form>
+        </p:dialog>
+
+        <p:confirmDialog header="Usunięcie sprzedaży" widgetVar="dlgSprzedazDelete" id="dlgSprzedazDelete" appendTo="@(body)" message="Czy na pewno usunąć sprzedaż?" severity="alert" showEffect="fade" hideEffect="fade">                
+            <h:form id="formDelete">  
+                <p:commandButton id="tak" value="Tak" actionListener="#{sprzedazBean.btnDeleteSprzedaz}" update=":formDataTable, :msgs" oncomplete="hideDialogOnSuccess(args, 'dlgSprzedazDelete', 'sprzedazTable');" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" ajax="true" />
+                <p:commandButton id="nie" value="Nie" onclick="PF('dlgSprzedazDelete').hide()" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+            </h:form>
+        </p:confirmDialog>  
+        
+        <p:dialog header="Klienci" id="dlgKlienci" widgetVar="dlgKlienci" appendTo="@(body)" showEffect="explode" hideEffect="clip" width="800" height="500" resizable="true">
+                <h:form id="formDataTableKlienci">   
+                    <p:dataTable id="klienciLista" 
+                                 var="klient" 
+                                 value="#{klientBean.klienci}" 
+                                 filteredValue="#{klientBean.filteredKlienci}"
+                                 widgetVar="klientTable"
+                                 rowIndexVar="index"
+                                 rowKey="#{klient.id}"
+                                 selection="#{klientBean.selectedKlient}"
+                                 selectionMode="single"
+                                 stickyHeader="false"
+                                 scrollable="true"
+                                 scrollHeight="350"
+                                 rows="10"
+                                 paginator="true"
+                                 paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                 paginatorPosition="bottom"
+                                 currentPageReportTemplate="Rekordy {startRecord}-{endRecord} z {totalRecords}"
+                                 rowsPerPageTemplate="10,20,30,50,100"
+                                 emptyMessage="Nie znaleziono rekordów">           
+                        <p:column headerText="Lp." style="width: 50px;">
+                            <h:outputText value="#{index + 1}" />
+                        </p:column>
+                        <p:column headerText="Id" filterBy="#{klient.id}" filterMatchMode="contains" style="width: 100px;">
+                            <h:outputText value="#{klient.id}" />
+                        </p:column>
+                        <p:column headerText="Imię" filterBy="#{klient.imie}" filterMatchMode="contains">
+                            <h:outputText value="#{klient.imie}" />
+                        </p:column>
+                        <p:column headerText="Nazwisko" filterBy="#{klient.nazwisko}" filterMatchMode="contains">
+                            <h:outputText value="#{klient.nazwisko}" />
+                        </p:column>  
+                        <p:column headerText="Salon" filterBy="#{klient.zaklad}" filterMatchMode="exact">
+                            <f:facet name="filter">                        
+                                <p:selectOneMenu id="zaklad" value="#{klientBean.klient.zaklad}" onchange="PF('klientTable').filter()">
+                                    <f:converter converterId="zakladConverter" />
+                                    <f:selectItem itemLabel="Wszystkie" itemValue="#{null}" noSelectionOption="true" />
+                                    <f:selectItems value="#{zakladBean.lista}" var="zaklad" itemValue="#{zaklad}" itemLabel="#{zaklad.nazwa}" />
+                                </p:selectOneMenu>   
+                            </f:facet>
+                            <h:outputText value="#{klient.zaklad.nazwa}" />
+                        </p:column>
+                        
+                        <p:ajax event="rowSelect" listener="#{klientBean.rowSelectListener}"/>
+                    </p:dataTable>
+                    <p:separator/>
+                    <!--
+                    <p:commandButton value="Wybierz" id="wybierzKlienta" oncomplete="PF('dlgKlienci').hide();" update=":formInsert, :msgs" icon="ui-icon-check" ajax="true" >
+                        <f:setPropertyActionListener value="#{klientBean.klient}" target="#{sprzedazBean.sprzedaz.klient}"/>
+                    </p:commandButton>
+                    -->
+                    <p:commandButton value="Wybierz" id="wybierzKlienta" action="#{sprzedazBean.ustawKlienta(klientBean.klient)}" oncomplete="PF('dlgKlienci').hide();" update=":formInsert, :formUpdate, :msgs" icon="ui-icon-check" ajax="true" />                                        
+                    <p:commandButton value="Anuluj" id="anulujWyborKlienta" onclick="PF('dlgKlienci').hide()" styleClass="ui-confirmdialog-no" icon="ui-icon-close"/>     
+                </h:form>                
+            </p:dialog> 
+
+    </ui:define>
+
+</ui:composition>

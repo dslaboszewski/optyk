@@ -1,0 +1,112 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE composition PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                template="../.././szablonAplikacji.xhtml"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+    <ui:define name="content">  
+
+        <h:form id="formDataTableWoj">                           
+            <p:commandButton id="btnInsert" value="Dodaj miejscowość (CTRL + Q)" onclick="PF('dlgDodajMiejscowosc').show();" icon="ui-icon-plus" title="Dodaj miejscowość" style="margin: 0 auto; margin-bottom: 10px; display: block; width: 20%; height: 45px;"/>
+            
+            <p:hotkey bind="ctrl+q" handler="PF('dlgDodajMiejscowosc').show();" />
+
+            <p:dataTable id="miejscowosci" 
+                         var="miejscowosc" 
+                         value="#{miejscowoscBean.lista}" 
+                         filteredValue="#{miejscowoscBean.filteredMiejscowosci}"
+                         widgetVar="miejscowoscTable"
+                         rowIndexVar="index"
+                         stickyHeader="false"
+                         rows="20"
+                         paginator="true"
+                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                         paginatorPosition="bottom"
+                         currentPageReportTemplate="Rekordy {startRecord}-{endRecord} z {totalRecords}"
+                         rowsPerPageTemplate="10,20,30,50,100"
+                         emptyMessage="Nie znaleziono rekordów">           
+
+                <f:facet name="header">
+                    <h:outputText value="Słownik miejscowości" style="font-size: large;" />
+                </f:facet>
+
+                <p:column headerText="Lp." style="width: 50px;">
+                    <h:outputText value="#{index + 1}" />
+                </p:column>
+                <p:column headerText="Id" filterBy="#{miejscowosc.id}" filterMatchMode="contains" style="width: 100px;">
+                    <h:outputText value="#{miejscowosc.id}" />
+                </p:column>                                
+                <p:column headerText="Nazwa" filterBy="#{miejscowosc.nazwa}" filterMatchMode="contains" filterStyle="width: 300px;">
+                    <h:outputText id="nazwa" value="#{miejscowosc.nazwa}" />
+                </p:column>        
+                <p:column headerText="Województwo" filterBy="#{miejscowosc.wojewodztwo}" filterMatchMode="exact">
+                    <f:facet name="filter">                        
+                        <p:selectOneMenu id="wojewodztwo" value="#{miejscowoscBean.miejscowosc.wojewodztwo}" onchange="PF('miejscowoscTable').filter()" style="width: 300px;">
+                            <f:converter converterId="wojewodztwoConverter" />
+                            <f:selectItem itemLabel="Wszystkie" itemValue="#{null}" noSelectionOption="true" />
+                            <f:selectItems value="#{wojewodztwoBean.lista}" var="wojewodztwo" itemValue="#{wojewodztwo}" itemLabel="#{wojewodztwo.nazwa}" />                            
+                        </p:selectOneMenu>   
+                    </f:facet>
+                    <h:outputText value="#{miejscowosc.wojewodztwo.nazwa}" />
+                </p:column>
+                <p:column headerText="Aktualizuj" style="width: 70px; text-align: center">
+                    <p:commandButton id="btnUpdate" update=":formUpdate, :dlgMiejscowoscUpdate" oncomplete="PF('dlgMiejscowoscUpdate').show()" icon="ui-icon-refresh" title="Aktualizacja państwa">
+                        <f:setPropertyActionListener value="#{miejscowosc}" target="#{miejscowoscBean.selectedMiejscowosc}" />
+                    </p:commandButton>
+                </p:column>
+            </p:dataTable>
+        </h:form>
+
+        <p:dialog header="Dodaj miejscowość" id="dlgDodajMiejscowosc" widgetVar="dlgDodajMiejscowosc" appendTo="@(body)" showEffect="explode" hideEffect="clip" width="400" height="200">
+            <h:form id="formInsert">  
+                <p:tabView>
+                    <p:tab title="Dane">
+                        <p:panelGrid columns="2">                                                       
+                            <p:outputLabel for="nazwa" value="Nazwa:" />
+                            <p:inputText id="nazwa" value="#{miejscowoscBean.miejscowosc.nazwa}" required="true" />  
+
+                            <p:outputLabel for="wojewodztwo" value="Województwo:" />
+                            <p:selectOneMenu id="wojewodztwo" value="#{miejscowoscBean.miejscowosc.wojewodztwo}" required="true">
+                                <f:converter converterId="wojewodztwoConverter" />
+                                <f:selectItem itemLabel="Wszystkie" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{wojewodztwoBean.lista}" var="wojewodztwo" itemValue="#{wojewodztwo}" itemLabel="#{wojewodztwo.nazwa}" />
+                            </p:selectOneMenu>   
+                        </p:panelGrid>
+                    </p:tab>
+                </p:tabView>
+                <p:separator/>
+                <p:commandButton value="Zapisz" id="zapisz" actionListener="#{miejscowoscBean.btnCreateMiejscowosc}" oncomplete="hideDialogOnSuccess(args, 'dlgDodajMiejscowosc', 'miejscowoscTable');" update=":msgs, :formDataTableWoj:miejscowosci" icon="ui-icon-circle-plus" ajax="true" />
+                <p:commandButton value="Anuluj" id="anuluj" onclick="PF('dlgDodajMiejscowosc').hide()" styleClass="ui-confirmdialog-no" icon="ui-icon-close"/>                 
+            </h:form>
+        </p:dialog>
+
+        <p:dialog header="Aktualizacja miejscowości" id="dlgMiejscowoscUpdate" widgetVar="dlgMiejscowoscUpdate" appendTo="@(body)" showEffect="explode" hideEffect="clip" width="400" height="300">
+            <h:form id="formUpdate">  
+                <p:tabView>
+                    <p:tab title="Dane">
+                        <p:panelGrid columns="2">      
+                            <p:outputLabel for="id" value="Id:" />
+                            <p:inputText id="id" value="#{miejscowoscBean.selectedMiejscowosc.id}" required="false" disabled="true"/>
+
+                            <p:outputLabel for="nazwa" value="Nazwa:" />
+                            <p:inputText id="nazwa" value="#{miejscowoscBean.selectedMiejscowosc.nazwa}" required="true" />  
+
+                            <p:outputLabel for="wojewodztwo" value="Województwo:" />
+                            <p:selectOneMenu id="wojewodztwo" value="#{miejscowoscBean.selectedMiejscowosc.wojewodztwo}" required="true">
+                                <f:converter converterId="wojewodztwoConverter" />
+                                <f:selectItem itemLabel="Wszystkie" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{wojewodztwoBean.lista}" var="wojewodztwo" itemValue="#{wojewodztwo}" itemLabel="#{wojewodztwo.nazwa}" />
+                            </p:selectOneMenu>   
+                        </p:panelGrid>
+                    </p:tab>
+                </p:tabView>
+                <p:separator/>
+                <p:commandButton value="Zapisz" id="zapisz_upd" actionListener="#{miejscowoscBean.btnUpdateMiejscowosc}" oncomplete="hideDialogOnSuccess(args, 'dlgMiejscowoscUpdate', 'miejscowoscTable');" update=":formDataTableWoj:miejscowosci, :msgs" icon="ui-icon-circle-plus" ajax="true" />
+                <p:commandButton value="Anuluj" id="anuluj_upd" onclick="PF('dlgMiejscowoscUpdate').hide()" styleClass="ui-confirmdialog-no" icon="ui-icon-close"/>                 
+            </h:form>
+        </p:dialog>      
+
+    </ui:define>
+</ui:composition>

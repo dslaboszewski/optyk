@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE composition PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                template="../.././szablonAplikacji.xhtml"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+    <ui:define name="content">  
+
+        <h:form id="formDataTable">                           
+            <p:commandButton id="btnInsert" value="Dodaj producenta soczewek (CTRL + Q)" onclick="PF('dlgDodajSoczewkaProducent').show();" icon="ui-icon-plus" title="Dodaj producenta soczewek" style="margin: 0 auto; margin-bottom: 10px; display: block; width: 20%; height: 45px;"/>
+            
+            <p:hotkey bind="ctrl+q" handler="PF('dlgDodajSoczewkaProducent').show();" />
+
+            <p:dataTable id="soczewkiProducenci" 
+                         var="soczewkiProducent" 
+                         value="#{soczewkiProducentBean.lista}" 
+                         filteredValue="#{soczewkiProducentBean.filteredSoczewkiProducenci}"
+                         widgetVar="soczewkiProducentTable"
+                         rowIndexVar="index"
+                         stickyHeader="false"
+                         rows="20"
+                         paginator="true"
+                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                         paginatorPosition="bottom"
+                         currentPageReportTemplate="Rekordy {startRecord}-{endRecord} z {totalRecords}"
+                         rowsPerPageTemplate="10,20,30,50,100"
+                         emptyMessage="Nie znaleziono rekordów">           
+
+                <f:facet name="header">
+                    <h:outputText value="Słownik producentów soczewek" style="font-size: large;" />
+                </f:facet>
+
+                <p:column headerText="Lp." style="width: 50px;">
+                    <h:outputText value="#{index + 1}" />
+                </p:column>
+                <p:column headerText="Id" filterBy="#{soczewkiProducent.id}" filterMatchMode="contains" style="width: 100px;">
+                    <h:outputText value="#{soczewkiProducent.id}" />
+                </p:column>                                
+                <p:column headerText="Nazwa" filterBy="#{soczewkiProducent.nazwa}" filterMatchMode="contains" filterStyle="width: 300px;">
+                    <h:outputText id="nazwa" value="#{soczewkiProducent.nazwa}" />
+                </p:column>                      
+                <p:column headerText="Aktualizuj" style="width: 70px; text-align: center">
+                    <p:commandButton id="btnUpdate" update=":formUpdate, :dlgSoczewkaProducentUpdate" oncomplete="PF('dlgSoczewkaProducentUpdate').show()" icon="ui-icon-refresh" title="Aktualizacja producenta soczewek">
+                        <f:setPropertyActionListener value="#{soczewkiProducent}" target="#{soczewkiProducentBean.selectedSoczewkiProducent}" />
+                    </p:commandButton>
+                </p:column>
+            </p:dataTable>
+        </h:form>
+
+        <p:dialog header="Dodaj producenta soczewek" id="dlgDodajSoczewkaProducent" widgetVar="dlgDodajSoczewkaProducent" appendTo="@(body)" showEffect="explode" hideEffect="clip" width="400" height="200">
+            <h:form id="formInsert">  
+                <p:tabView>
+                    <p:tab title="Dane">
+                        <p:panelGrid columns="2">                                                       
+                            <p:outputLabel for="nazwa" value="Nazwa:" />
+                            <p:inputText id="nazwa" value="#{soczewkiProducentBean.soczewkiProducent.nazwa}" required="true" />  
+                        </p:panelGrid>
+                    </p:tab>
+                </p:tabView>
+                <p:separator/>
+                <p:commandButton value="Zapisz" id="zapisz" actionListener="#{soczewkiProducentBean.btnCreateSoczewkiProducent}" update=":formDataTable:soczewkiProducenci, dlgDodajSoczewkaProducent, :msgs" oncomplete="hideDialogOnSuccess(args, 'dlgDodajSoczewkaProducent', 'soczewkiProducentTable');" icon="ui-icon-circle-plus" ajax="true" />
+                <p:commandButton value="Anuluj" id="anuluj" onclick="PF('dlgDodajSoczewkaProducent').hide()" styleClass="ui-confirmdialog-no" icon="ui-icon-close"/>                 
+            </h:form>
+        </p:dialog>
+
+        <p:dialog header="Aktualizacja producenta soczewek" id="dlgSoczewkaProducentUpdate" widgetVar="dlgSoczewkaProducentUpdate" appendTo="@(body)" showEffect="explode" hideEffect="clip" width="400" height="200">
+            <h:form id="formUpdate">  
+                <p:tabView>
+                    <p:tab title="Dane">
+                        <p:panelGrid columns="2">      
+                            <p:outputLabel for="id" value="Id:" />
+                            <p:inputText id="id" value="#{soczewkiProducentBean.selectedSoczewkiProducent.id}" required="false" disabled="true"/>
+
+                            <p:outputLabel for="nazwa" value="Nazwa:" />
+                            <p:inputText id="nazwa" value="#{soczewkiProducentBean.selectedSoczewkiProducent.nazwa}" required="true" />  
+                        </p:panelGrid>
+                    </p:tab>
+                </p:tabView>
+                <p:separator/>
+                <p:commandButton value="Zapisz" id="zapisz_upd" actionListener="#{soczewkiProducentBean.btnUpdateSoczewkiProducent}" oncomplete="hideDialogOnSuccess(args, 'dlgSoczewkaProducentUpdate', 'soczewkiProducentTable');" update=":formDataTable:soczewkiProducenci, dlgSoczewkaProducentUpdate, :msgs" icon="ui-icon-circle-plus" ajax="true" />
+                <p:commandButton value="Anuluj" id="anuluj_upd" onclick="PF('dlgSoczewkaProducentUpdate').hide()" styleClass="ui-confirmdialog-no" icon="ui-icon-close"/>                 
+            </h:form>
+        </p:dialog>      
+
+    </ui:define>
+</ui:composition>

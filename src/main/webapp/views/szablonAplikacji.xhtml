@@ -1,0 +1,193 @@
+<?xml version='1.0' encoding='UTF-8' ?> 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:h="http://java.sun.com/jsf/html" 
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui"   >
+
+    <h:head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />        
+        <h:outputStylesheet name="css/default.css"/>
+        <h:outputStylesheet name="css/cssLayout.css"/>
+        <h:outputScript library="js" name="locales.js"/>
+        <h:outputScript library="js" name="utils.js"/>
+        <title>Optyk CRM</title>
+    </h:head>
+
+    <h:body>
+        <div id="menu">
+            <p:growl id="msgs" showDetail="true" />  
+
+            <p:layout fullPage="true">
+                <p:layoutUnit position="north" size="50" header="System obsługi klientów salonów optycznych OPTICA" style="text-align: center; font-size: large;">
+                </p:layoutUnit>
+
+                <p:layoutUnit position="center">                    
+                    <h:form> 
+                        <p:growl id="messages"/>
+
+                        <p:menubar>
+                            <p:submenu label="Klienci" icon="ui-icon-document">
+                                <p:menuitem value="Bielszowice" url="#{appBean.baseUrl}#{appBean.basePath}klient/index.xhtml?zaklad=1" />
+                                <p:menuitem value="Godula" url="#{appBean.baseUrl}#{appBean.basePath}klient/index.xhtml?zaklad=2" />
+                                <p:menuitem value="Halemba" url="#{appBean.baseUrl}#{appBean.basePath}klient/index.xhtml?zaklad=3" />
+                                <p:menuitem value="Karmańskie" url="#{appBean.baseUrl}#{appBean.basePath}klient/index.xhtml?zaklad=4" />
+                                <p:separator />
+                                <p:menuitem value="Wszystkie salony" url="#{appBean.baseUrl}#{appBean.basePath}klient/index.xhtml?zaklad=0" />               
+                            </p:submenu>
+
+                            <p:submenu label="Dzienniki sprzedaży produktów" icon="ui-icon-document">
+                                <p:submenu label="Według daty" icon="ui-icon-document">                                
+                                    <p:menuitem value="Bielszowice" oncomplete="PF('dialogDataDziennikSprz').show()" actionListener="#{sprzedazBean.setZakladNav('1')}" update="dlgDataDziennikSprz" />
+                                    <p:menuitem value="Godula" oncomplete="PF('dialogDataDziennikSprz').show()" actionListener="#{sprzedazBean.setZakladNav('2')}" update="dlgDataDziennikSprz" />
+                                    <p:menuitem value="Halemba" oncomplete="PF('dialogDataDziennikSprz').show()" actionListener="#{sprzedazBean.setZakladNav('3')}" update="dlgDataDziennikSprz" />
+                                    <p:menuitem value="Karmańskie" oncomplete="PF('dialogDataDziennikSprz').show()" actionListener="#{sprzedazBean.setZakladNav('4')}" update="dlgDataDziennikSprz" />
+                                    <p:separator />
+                                    <p:menuitem value="Wszystkie salony" oncomplete="PF('dialogDataDziennikSprz').show()" actionListener="#{sprzedazBean.setZakladNav('0')}" update="dlgDataDziennikSprz" />  
+                                </p:submenu>
+                                <p:menuitem value="Wszystko" url="#{appBean.baseUrl}#{appBean.basePath}sprzedaz/index.xhtml" />  
+                            </p:submenu>
+
+                            <p:submenu label="Dzienniki sprzedaży usług" icon="ui-icon-document"> 
+                                <p:submenu label="Według daty" icon="ui-icon-document">    
+                                    <p:menuitem value="Bielszowice" oncomplete="PF('dialogDataDziennikNapraw').show()" actionListener="#{naprawaBean.setZakladNav('1')}" update="dlgDataDziennikNapraw" />
+                                    <p:menuitem value="Godula" oncomplete="PF('dialogDataDziennikNapraw').show()" actionListener="#{naprawaBean.setZakladNav('2')}" update="dlgDataDziennikNapraw" />
+                                    <p:menuitem value="Halemba" oncomplete="PF('dialogDataDziennikNapraw').show()" actionListener="#{naprawaBean.setZakladNav('3')}" update="dlgDataDziennikNapraw" />
+                                    <p:menuitem value="Karmańskie" oncomplete="PF('dialogDataDziennikNapraw').show()" actionListener="#{naprawaBean.setZakladNav('4')}" update="dlgDataDziennikNapraw" />
+                                    <p:separator />
+                                    <p:menuitem value="Wszystkie salony" oncomplete="PF('dialogDataDziennikNapraw').show()" actionListener="#{naprawaBean.setZakladNav('0')}" update="dlgDataDziennikNapraw" />
+                                </p:submenu>
+                                <p:menuitem value="Wszystko" url="#{appBean.baseUrl}#{appBean.basePath}naprawa/index.xhtml" /> 
+                            </p:submenu>
+
+                            <!--
+                            <p:menuitem value="Notatnik" url="#" icon="ui-icon-document" />
+                            -->
+
+                            <p:submenu label="Raporty" icon="ui-icon-document">
+                                <p:menuitem value="Sprzedaż wg salonów" oncomplete="PF('dlgSprzedazSalony').show()" update="dlgSprzedazSalony" />
+                                <p:menuitem value="Sprzedaż wg sprzedawców" oncomplete="PF('dlgSprzedazSprzedawcy').show()" update="dlgSprzedazSprzedawcy" />
+                            </p:submenu>                            
+
+                            <p:submenu label="Administracja" icon="ui-icon-document">
+                                <p:submenu label="Słowniki" icon="ui-icon-document">
+                                    <p:submenu label="Adresy" icon="ui-icon-document">
+                                        <p:menuitem value="Miejscowość" url="#{appBean.baseUrl}#{appBean.basePath}slownik/adres/miejscowosc.xhtml" />
+                                        <p:menuitem value="Państwo" url="#{appBean.baseUrl}#{appBean.basePath}slownik/adres/panstwo.xhtml" />
+                                        <p:menuitem value="Województwo" url="#{appBean.baseUrl}#{appBean.basePath}slownik/adres/wojewodztwo.xhtml" />                                        
+                                    </p:submenu>                                
+                                    <p:submenu label="Sprzedaż" icon="ui-icon-document">
+                                        <p:menuitem value="Inny produkt" url="#{appBean.baseUrl}#{appBean.basePath}slownik/sprzedaz/inny_towar.xhtml" />
+                                        <p:menuitem value="Producenci opraw" url="#{appBean.baseUrl}#{appBean.basePath}slownik/sprzedaz/producent_oprawa.xhtml" />
+                                        <p:menuitem value="Producenci soczewek" url="#{appBean.baseUrl}#{appBean.basePath}slownik/sprzedaz/producent_soczewka.xhtml" />
+                                        <p:menuitem value="Producenci szkieł" url="#{appBean.baseUrl}#{appBean.basePath}slownik/sprzedaz/producent_szklo.xhtml" />                                        
+                                        <p:menuitem value="Sposoby płatności" url="#{appBean.baseUrl}#{appBean.basePath}slownik/sprzedaz/sposob_platnosc.xhtml" />
+                                        <p:menuitem value="Typy usług" url="#{appBean.baseUrl}#{appBean.basePath}slownik/sprzedaz/typ_usluga.xhtml" />                                        
+                                    </p:submenu>
+                                </p:submenu>
+                                <p:menuitem value="Zmiana hasła" onclick="PF('dlgZmianaHasla').show();" icon="ui-icon-document" />
+                            </p:submenu>
+
+                            <p:menuitem value="O systemie" onclick="PF('OSystemiedlg').show();" icon="ui-icon-document" />
+                            <p:menuitem value="Wyloguj [#{loginBean.uzytkownik.imie} #{loginBean.uzytkownik.nazwisko}]" actionListener="#{loginBean.logout}" oncomplete="wyloguj(xhr, status, args)" icon="ui-icon-close" />
+
+                            <!--
+                            <f:facet name="options">
+                                <p:inputText style="margin-right:10px" placeholder="Search"/>
+                                <p:commandButton type="button" value="Wyloguj" icon="ui-icon-extlink" onclick="wyloguj()" />
+                            </f:facet>
+                            -->
+                        </p:menubar>       
+                        <!-- <h:graphicImage value="images/logo_optica.PNG" style="display: block; margin: auto; margin-top: 100px"></h:graphicImage> -->
+                    </h:form>
+                    <ui:insert name="content">Content</ui:insert>
+                </p:layoutUnit>
+
+                <p:layoutUnit position="south" size="50" header="&copy; 2017" style="text-align:center">
+                </p:layoutUnit>
+            </p:layout>          
+
+            <p:dialog header="Podaj datę dla dziennika sprzedaży produktów" widgetVar="dialogDataDziennikSprz" id="dlgDataDziennikSprz" appendTo="@(body)" showEffect="fade" hideEffect="fade" resizable="false">
+                <h:form id="formDataDziennikSprz">  
+                    <p:calendar widgetVar="calData" placeholder="Wybierz datę" showButtonPanel="false" navigator="false" locale="pl" pattern="dd-MM-yyyy">
+                        <p:ajax event="dateSelect" oncomplete="location.href = '#{appBean.baseUrl}#{appBean.basePath}sprzedaz/index.xhtml?zaklad=#{sprzedazBean.zakladNav}&amp;datasprz=' + formatDate(PF('calData').getDate())" /> 
+                        <!-- <p:ajax event="dateSelect" oncomplete="alert(formatDate(PF('calData').getDate()))" /> -->
+                    </p:calendar>                     
+                </h:form>
+            </p:dialog>
+
+            <p:dialog header="Podaj datę dla dziennika sprzedaży usług" widgetVar="dialogDataDziennikNapraw" id="dlgDataDziennikNapraw" appendTo="@(body)" showEffect="fade" hideEffect="fade" resizable="false">
+                <h:form id="formDataDziennikNapraw">  
+                    <p:calendar widgetVar="calData" placeholder="Wybierz datę" showButtonPanel="false" navigator="false" locale="pl" pattern="dd-MM-yyyy">
+                        <p:ajax event="dateSelect" oncomplete="location.href = '#{appBean.baseUrl}#{appBean.basePath}naprawa/index.xhtml?zaklad=#{naprawaBean.zakladNav}&amp;datanaprawy=' + formatDate(PF('calData').getDate())" /> 
+                        <!-- <p:ajax event="dateSelect" oncomplete="alert(formatDate(PF('calData').getDate()))" /> -->
+                    </p:calendar>                     
+                </h:form>
+            </p:dialog>
+
+            <p:dialog header="Podaj parametry do raportu" widgetVar="dlgSprzedazSalony" id="dlgSprzedazSalony" appendTo="@(body)" showEffect="fade" hideEffect="fade" resizable="false">
+                <h:form id="formSprzedazSalony">  
+                    <p:panelGrid columns="2">
+                        <p:calendar widgetVar="calDataOd" placeholder="Data od:" value="#{rptSprzedazSalonyBean.dataOd}" showButtonPanel="false" showOn="button" navigator="false" locale="pl" pattern="dd-MM-yyyy" />
+                        <p:calendar widgetVar="calDataDo" placeholder="Data do:" value="#{rptSprzedazSalonyBean.dataDo}" showButtonPanel="false" showOn="button" navigator="false" locale="pl" pattern="dd-MM-yyyy" />   
+                    </p:panelGrid>
+                    <p:separator/>
+                    <p:commandButton value="OK" id="ok" actionListener="#{rptSprzedazSalonyBean.init()}" oncomplete="PF('dlgSprzedazSalony').hide(); location.href = '#{appBean.baseUrl}#{appBean.basePath}raport/sprzedaz_salony.xhtml'" update="formSprzedazSalony" icon="ui-icon-circle-plus" />
+                    <p:commandButton value="Anuluj" id="anuluj" onclick="PF('dlgSprzedazSalony').hide()" styleClass="ui-confirmdialog-no" icon="ui-icon-close"/>                        
+                </h:form>
+            </p:dialog>
+
+            <p:dialog header="Podaj parametry do raportu" widgetVar="dlgSprzedazSprzedawcy" id="dlgSprzedazSprzedawcy" appendTo="@(body)" showEffect="fade" hideEffect="fade" resizable="false">
+                <h:form id="formSprzedazSprzedawcy">  
+                    <p:panelGrid columns="2">
+                        <p:calendar widgetVar="calDataOd" placeholder="Data od:" value="#{rptSprzedazSprzedawcyBean.dataOd}" showButtonPanel="false" showOn="button" navigator="false" locale="pl" pattern="dd-MM-yyyy" />
+                        <p:calendar widgetVar="calDataDo" placeholder="Data do:" value="#{rptSprzedazSprzedawcyBean.dataDo}" showButtonPanel="false" showOn="button" navigator="false" locale="pl" pattern="dd-MM-yyyy" />   
+                    </p:panelGrid>
+                    <p:separator/>
+                    <p:commandButton value="OK" id="ok" actionListener="#{rptSprzedazSprzedawcyBean.init()}" oncomplete="PF('dlgSprzedazSalony').hide(); location.href = '#{appBean.baseUrl}#{appBean.basePath}raport/sprzedaz_sprzedawcy.xhtml'" update="formSprzedazSalony" icon="ui-icon-circle-plus" />
+                    <p:commandButton value="Anuluj" id="anuluj" onclick="PF('dlgSprzedazSalony').hide()" styleClass="ui-confirmdialog-no" icon="ui-icon-close"/>                        
+                </h:form>
+            </p:dialog>
+
+            <p:dialog header="Zmiana hasła" id="dlgZmianaHasla" widgetVar="dlgZmianaHasla" appendTo="@(body)" showEffect="explode" hideEffect="clip" width="450" height="200">
+                <h:form id="formZmianaHasla">  
+                    <p:panelGrid columns="2">      
+                        <p:outputLabel for="stareHaslo" value="Obecne hasło:" />
+                        <p:password id="stareHaslo" value="#{loginBean.stareHaslo}" required="true"/>
+
+                        <p:outputLabel for="noweHaslo" value="Nowe hasło:" />
+                        <p:password id="noweHaslo" value="#{loginBean.noweHaslo}" required="true" feedback="true"
+                                    promptLabel="Siła hasła" weakLabel="Słabe" goodLabel="Dobre" strongLabel="Silne" />
+
+                        <p:outputLabel for="potwNoweHaslo" value="Potwierdź nowe hasło:" />
+                        <p:password id="potwNoweHaslo" value="#{loginBean.potwNoweHaslo}" required="true"/>
+                    </p:panelGrid>
+                    <p:separator/>
+                    <p:commandButton value="Zmień" id="zmienHaslo" actionListener="#{loginBean.zmienHaslo}" oncomplete="PF('dlgZmianaHasla').hide();" update="dlgZmianaHasla, :msgs" icon="ui-icon-circle-plus" ajax="true" />
+                    <p:commandButton value="Anuluj" id="anulujHaslo" onclick="PF('dlgZmianaHasla').hide()" styleClass="ui-confirmdialog-no" icon="ui-icon-close"/>                 
+                </h:form>
+            </p:dialog>   
+
+            <p:dialog header="O systemie" widgetVar="OSystemiedlg" showEffect="explode" hideEffect="clip" height="200" resizable="false">
+                System obsługi klientów salonów optycznych OPTICA
+                <p:separator/>
+                Zalogowano jako: #{loginBean.uzytkownik.imie} #{loginBean.uzytkownik.nazwisko}
+                <p:separator/>
+                Autor: Damian Słaboszewski <br/>
+                tel. 504 621 458 <br/>
+                damian.slaboszewski@gmail.com
+                <p:separator/>
+                Wersja: 1.0.0                
+            </p:dialog>                   
+        </div>                        
+
+        <script type="text/javascript">
+            function wyloguj(xhr, status, args) {
+                if (args.loggedOut) {
+                    location.href = args.path;
+                }
+            }
+        </script>
+    </h:body>
+</html>

@@ -1,0 +1,254 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE composition PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                template=".././szablonAplikacji.xhtml"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+    <ui:define name="content">                  
+
+        <h:form id="formDataTable">   
+            <p:commandButton id="btnInsert" widgetVar="varBtnInsert" value="Dodaj klienta (CTRL + Q)" action="#{klientBean.setKlientZaklad}" update="dlgDodajKlienta" oncomplete="PF('dlgDodajKlienta').show();" icon="ui-icon-plus" title="Dodaj klienta" ajax="true" style="margin: 0 auto; margin-bottom: 10px; display: block; width: 20%; height: 45px;"/>
+                        
+            <p:hotkey bind="ctrl+q" handler="PF('varBtnInsert').jq.click();" />
+            
+            <p:remoteCommand name="clearAttributesRC" actionListener="#{klientBean.clearAttributes}" />
+            
+            <p:dataTable id="klienci" 
+                         var="klient" 
+                         value="#{klientBean.klienci}" 
+                         filteredValue="#{klientBean.filteredKlienci}"
+                         widgetVar="klientTable"
+                         rowIndexVar="index"
+                         rowKey="#{klient.id}"
+                         selection="#{klientBean.selectedKlient}"
+                         selectionMode="single"
+                         stickyHeader="false"
+                         rows="20"
+                         paginator="true"
+                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                         paginatorPosition="bottom"
+                         currentPageReportTemplate="Rekordy {startRecord}-{endRecord} z {totalRecords}"
+                         rowsPerPageTemplate="10,20,30,50,100"
+                         emptyMessage="Nie znaleziono rekordów">           
+
+                <f:facet name="header">
+                    <h:outputText value="Kartoteka klientów [#{klientBean.kartotekaKlientNaglowek}]" style="font-size: large;" />
+                </f:facet>
+
+                <p:column headerText="Lp." style="width: 50px;">
+                    <h:outputText value="#{index + 1}" />
+                </p:column>
+                <p:column headerText="Id" filterBy="#{klient.id}" filterMatchMode="contains" style="width: 100px;">
+                    <h:outputText value="#{klient.id}" />
+                </p:column>
+                <p:column headerText="Imię" filterBy="#{klient.imie}" filterMatchMode="contains" filterStyle="width: 150px;">
+                    <h:outputText value="#{klient.imie}" />
+                </p:column>
+                <p:column headerText="Nazwisko" filterBy="#{klient.nazwisko}" filterMatchMode="contains" filterStyle="width: 200px;">
+                    <h:outputText value="#{klient.nazwisko}" />
+                </p:column>                
+                <p:column headerText="Adres e-mail" filterBy="#{klient.email}" filterMatchMode="contains" filterStyle="width: 200px;">
+                    <h:outputText value="#{klient.email}" />
+                </p:column>                
+                <p:column headerText="Numer telefonu" filterBy="#{klient.telefon}" filterMatchMode="contains" filterStyle="width: 200px;">
+                    <h:outputText value="#{klient.telefon}" />
+                </p:column>                                
+                <p:column headerText="Salon" filterBy="#{klient.zaklad}" filterMatchMode="exact">
+                    <f:facet name="filter">                        
+                        <p:selectOneMenu id="zaklad" value="#{klientBean.klient.zaklad}" onchange="PF('klientTable').filter()">
+                            <f:converter converterId="zakladConverter" />
+                            <f:selectItem itemLabel="Wszystkie" itemValue="#{null}" noSelectionOption="true" />
+                            <f:selectItems value="#{zakladBean.lista}" var="zaklad" itemValue="#{zaklad}" itemLabel="#{zaklad.nazwa}" />
+                        </p:selectOneMenu>   
+                    </f:facet>
+                    <h:outputText value="#{klient.zaklad.nazwa}" />
+                </p:column>
+                <p:column headerText="Data wprowadzenia" filterBy="#{klient.dataWprowadzenia}" filterFunction="#{klientBean.filterByDataWpr}">
+                    <f:facet name="filter">
+                        <p:calendar widgetVar="calDataOd" placeholder="Od:" showButtonPanel="true" navigator="false" locale="pl"  pattern="dd-MM-yyyy">
+                            <p:ajax event="dateSelect"  oncomplete="PF('klientTable').filter()"/>
+                        </p:calendar>
+                    </f:facet>             
+                    <h:outputText value="#{klient.dataWprowadzenia}" >
+                        <f:convertDateTime type="date" timeZone="Europe/Warsaw" pattern="dd-MM-yyyy HH:mm:ss"/>
+                    </h:outputText>                    
+                </p:column>                
+                <p:column headerText="Aktualizuj" style="width: 70px; text-align: center">
+                    <p:commandButton id="btnUpdate" update=":formUpdate" oncomplete="PF('dialogKlientUpdate').show()" icon="ui-icon-refresh" title="Aktualizacja klienta">
+                        <f:setPropertyActionListener value="#{klient}" target="#{klientBean.selectedKlient}" />
+                        <f:setPropertyActionListener value="#{klient.adresSet.toArray()[0]}" target="#{klientBean.selectedKlientAdres}" />
+                    </p:commandButton>
+                </p:column>
+                <p:column headerText="Usuń" style="width: 40px; text-align: center">
+                    <p:commandButton id="btnDelete" update=":formDelete" oncomplete="PF('dialogKlientDelete').show()" icon="ui-icon-close" title="Usunięcie klienta">
+                        <f:setPropertyActionListener value="#{klient}" target="#{klientBean.selectedKlient}" />
+                    </p:commandButton>
+                </p:column>
+
+            </p:dataTable>
+
+            <p:contextMenu for="klienci" id="context_menu" widgetVar="context_menu" >            
+                <p:menuitem value="Sprzedaż produktów" icon="ui-icon-search" action="#{klientBean.ustawCtxKlienta(klientBean.selectedKlient)}" onclick="location.href = '#{appBean.baseUrl}#{appBean.basePath}sprzedaz/index.xhtml?klient=' + PF('klientTable').selection" />
+                <p:menuitem value="Sprzedaż usług" icon="ui-icon-search" action="#{klientBean.ustawCtxKlienta(klientBean.selectedKlient)}" onclick="location.href = '#{appBean.baseUrl}#{appBean.basePath}naprawa/index.xhtml?klient=' + PF('klientTable').selection" />    
+            </p:contextMenu>
+
+        </h:form>
+
+        <p:dialog header="Dodaj klienta" id="dlgDodajKlienta" widgetVar="dlgDodajKlienta" appendTo="@(body)" showEffect="explode" hideEffect="clip" height="400">
+            <h:form id="formInsert">
+                <p:tabView id="tabView" cache="false">
+                    <p:tab id="tab1" title="Dane" rendered="true">
+                        <p:panelGrid id="pg1" columns="2">
+                            <p:outputLabel for="imie" value="Imię:" />
+                            <p:inputText id="imie" value="#{klientBean.klient.imie}" required="true" />
+
+                            <p:outputLabel for="nazwisko" value="Nazwisko:" />
+                            <p:inputText id="nazwisko" value="#{klientBean.klient.nazwisko}" required="true" />
+
+                            <p:outputLabel for="email" value="Adres e-mail:" />
+                            <p:inputText id="email" value="#{klientBean.klient.email}" required="false" />
+
+                            <p:outputLabel for="telefon" value="Numer telefonu:" />
+                            <p:inputText id="telefon" value="#{klientBean.klient.telefon}" required="false" />
+
+                            <p:outputLabel for="zaklad" value="Salon:" />
+                            <p:selectOneMenu id="zaklad" value="#{klientBean.klient.zaklad}" required="true">
+                                <f:converter converterId="zakladConverter" />
+                                <f:selectItem itemLabel="Wybierz" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{zakladBean.lista}" var="zaklad" itemValue="#{zaklad}" itemLabel="#{zaklad.nazwa}" />
+                            </p:selectOneMenu>                                 
+                                                        
+                        </p:panelGrid>
+                    </p:tab>
+                    <p:tab id="tab2" title="Adres">
+                        <p:panelGrid id="pg2" columns="2">
+                            <p:outputLabel for="panstwo" value="Państwo:" />   
+                            <p:selectOneMenu id="panstwo" value="#{klientBean.klientAdres.panstwo}" required="false">
+                                <f:converter converterId="panstwoConverter" />
+                                <f:selectItem itemLabel="Wybierz" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{panstwoBean.lista}" var="panstwo" itemValue="#{panstwo}" itemLabel="#{panstwo.nazwa}" />
+                            </p:selectOneMenu>
+
+                            <p:outputLabel for="wojewodztwo" value="Województwo:" />   
+                            <p:selectOneMenu id="wojewodztwo" value="#{klientBean.klientAdres.wojewodztwo}" required="false">
+                                <f:converter converterId="wojewodztwoConverter" />
+                                <f:selectItem itemLabel="Wybierz" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{wojewodztwoBean.lista}" var="wojewodztwo" itemValue="#{wojewodztwo}" itemLabel="#{wojewodztwo.nazwa}" />
+                            </p:selectOneMenu>                             
+
+                            <p:outputLabel for="miejscowosc" value="Miejscowość" />   
+                            <p:selectOneMenu id="miejscowosc" value="#{klientBean.klientAdres.miejscowosc}" required="false">
+                                <f:converter converterId="miejscowoscConverter" />
+                                <f:selectItem itemLabel="Wybierz" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{miejscowoscBean.lista}" var="miejscowosc" itemValue="#{miejscowosc}" itemLabel="#{miejscowosc.nazwa}" />
+                            </p:selectOneMenu>  
+                            
+                            <p:outputLabel for="kodPocztowy" value="Kod pocztowy:" />
+                            <p:inputText id="kodPocztowy" value="#{klientBean.klientAdres.kodPocztowy}" required="false" />
+
+                            <p:outputLabel for="ulica" value="Ulica:" />
+                            <p:inputText id="ulica" value="#{klientBean.klientAdres.ulica}" required="false" />
+
+                            <p:outputLabel for="nrBudynku" value="Numer budynku:" />
+                            <p:inputText id="nrBudynku" value="#{klientBean.klientAdres.nrBudynku}" required="false" />
+
+                            <p:outputLabel for="nrLokalu" value="Numer lokalu:" />
+                            <p:inputText id="nrLokalu" value="#{klientBean.klientAdres.nrLokalu}" required="false" />
+                        </p:panelGrid>
+                    </p:tab>
+                </p:tabView>
+                <p:separator/>
+                <p:commandButton value="Zapisz" id="zapisz" actionListener="#{klientBean.btnCreateKlient}" update=":formDataTable:klienci, formInsert:tabView, msgs" oncomplete="hideDialogOnSuccess(args, 'dlgDodajKlienta', 'klientTable');" icon="ui-icon-circle-plus" ajax="true" />
+                <p:commandButton value="Anuluj" id="anuluj" onclick="PF('dlgDodajKlienta').hide()" styleClass="ui-confirmdialog-no" icon="ui-icon-close"/>                 
+            </h:form>
+        </p:dialog>
+
+        <p:dialog header="Aktualizacja klienta" widgetVar="dialogKlientUpdate" id="dlgKlientUpdate" appendTo="@(body)" showEffect="fade" hideEffect="fade" resizable="false">
+            <h:form id="formUpdate">  
+                <p:menubar>
+                    <p:submenu label="Idź do" icon="ui-icon-document">
+                        <p:menuitem value="Sprzedaż produktów" icon="ui-icon-search" action="#{klientBean.ustawCtxKlienta(klientBean.selectedKlient)}" onclick="location.href = '#{appBean.baseUrl}#{appBean.basePath}sprzedaz/index.xhtml?klient=' + #{klientBean.selectedKlient.id}" />
+                        <p:menuitem value="Sprzedaż usług" icon="ui-icon-search" action="#{klientBean.ustawCtxKlienta(klientBean.selectedKlient)}" onclick="location.href = '#{appBean.baseUrl}#{appBean.basePath}naprawa/index.xhtml?klient=' + #{klientBean.selectedKlient.id}" />               
+                    </p:submenu>
+                </p:menubar>
+
+                <p:tabView id="tabViewUpd">
+                    <p:tab title="Dane">
+                        <p:panelGrid columns="2">
+                            <p:outputLabel for="id" value="Id:" />
+                            <p:inputText id="id" value="#{klientBean.selectedKlient.id}" required="true" disabled="true"/>
+
+                            <p:outputLabel for="imie" value="Imię:" />
+                            <p:inputText id="imie" value="#{klientBean.selectedKlient.imie}" required="true" />
+
+                            <p:outputLabel for="nazwisko" value="Nazwisko:" />
+                            <p:inputText id="nazwisko" value="#{klientBean.selectedKlient.nazwisko}" required="true" />
+
+                            <p:outputLabel for="email" value="Adres e-mail:" />
+                            <p:inputText id="email" value="#{klientBean.selectedKlient.email}" required="false" />
+
+                            <p:outputLabel for="telefon" value="Numer telefonu:" />
+                            <p:inputText id="telefon" value="#{klientBean.selectedKlient.telefon}" required="false" />
+
+                            <p:outputLabel for="zaklad" value="Salon:" />
+                            <p:selectOneMenu id="zaklad" value="#{klientBean.selectedKlient.zaklad}" required="true">
+                                <f:converter converterId="zakladConverter" />
+                                <f:selectItem itemLabel="Wybierz" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{zakladBean.lista}" var="zaklad" itemValue="#{zaklad}" itemLabel="#{zaklad.nazwa}" />
+                            </p:selectOneMenu>                           
+                        </p:panelGrid>
+                    </p:tab>
+                    <p:tab title="Adres">
+                        <p:panelGrid columns="2">
+                            <p:outputLabel for="panstwo" value="Państwo:" />   
+                            <p:selectOneMenu id="panstwo" value="#{klientBean.selectedKlientAdres.panstwo}" required="false">                                
+                                <f:converter converterId="panstwoConverter" />                    
+                                <f:selectItem itemLabel="Wybierz" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{panstwoBean.lista}" var="panstwo" itemValue="#{panstwo}" itemLabel="#{panstwo.nazwa}" />
+                            </p:selectOneMenu>
+
+                            <p:outputLabel for="wojewodztwo" value="Województwo:" />   
+                            <p:selectOneMenu id="wojewodztwo" value="#{klientBean.selectedKlientAdres.wojewodztwo}" required="false">
+                                <f:converter converterId="wojewodztwoConverter" />
+                                <f:selectItem itemLabel="Wybierz" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{wojewodztwoBean.lista}" var="wojewodztwo" itemValue="#{wojewodztwo}" itemLabel="#{wojewodztwo.nazwa}" />
+                            </p:selectOneMenu>                             
+
+                            <p:outputLabel for="miejscowosc" value="Miejscowość" />   
+                            <p:selectOneMenu id="miejscowosc" value="#{klientBean.selectedKlientAdres.miejscowosc}" required="false">
+                                <f:converter converterId="miejscowoscConverter" />
+                                <f:selectItem itemLabel="Wybierz" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{miejscowoscBean.lista}" var="miejscowosc" itemValue="#{miejscowosc}" itemLabel="#{miejscowosc.nazwa}" />
+                            </p:selectOneMenu>  
+                            
+                            <p:outputLabel for="kodPocztowy" value="Kod pocztowy:" />
+                            <p:inputText id="kodPocztowy" value="#{klientBean.selectedKlientAdres.kodPocztowy}" required="false" />
+
+                            <p:outputLabel for="ulica" value="Ulica:" />
+                            <p:inputText id="ulica" value="#{klientBean.selectedKlientAdres.ulica}" required="false" />
+
+                            <p:outputLabel for="nrBudynku" value="Numer budynku:" />
+                            <p:inputText id="nrBudynku" value="#{klientBean.selectedKlientAdres.nrBudynku}" required="false" />
+
+                            <p:outputLabel for="nrLokalu" value="Numer lokalu:" />
+                            <p:inputText id="nrLokalu" value="#{klientBean.selectedKlientAdres.nrLokalu}" required="false" />
+                        </p:panelGrid>
+                    </p:tab>
+                </p:tabView>
+                <p:separator/>
+                <p:commandButton value="Zapisz" id="zapisz_upd" actionListener="#{klientBean.btnUpdateKlient}" update=":formDataTable:klienci, formUpdate:tabViewUpd, msgs" oncomplete="hideDialogOnSuccess(args, 'dialogKlientUpdate', 'klientTable');" icon="ui-icon-circle-plus" ajax="true" /> 
+                <p:commandButton value="Anuluj" id="anuluj_upd" onclick="PF('dialogKlientUpdate').hide()" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+            </h:form>
+        </p:dialog>
+
+        <p:confirmDialog header="Usunięcie klienta" widgetVar="dialogKlientDelete" id="dlgKlientDelete" appendTo="@(body)" message="Czy na pewno usunąć klienta?" severity="alert" showEffect="fade" hideEffect="fade">                
+            <h:form id="formDelete">  
+                <p:commandButton id="tak" value="Tak" actionListener="#{klientBean.btnDeleteKlient}" update=":formDataTable, :msgs" oncomplete="hideDialogOnSuccess(args, 'dialogKlientDelete', 'klientTable');" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" ajax="true" />
+                <p:commandButton id="nie" value="Nie" onclick="PF('dialogKlientDelete').hide()" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+            </h:form>
+        </p:confirmDialog>            
+
+    </ui:define>
+</ui:composition>

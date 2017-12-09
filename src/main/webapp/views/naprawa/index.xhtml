@@ -1,0 +1,321 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE composition PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                template="./../szablonAplikacji.xhtml"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+    <ui:define name="content">   
+
+        <h:form id="formDataTable">                           
+            <p:commandButton id="btnInsert" widgetVar="varBtnInsert" value="Dodaj sprzedaż usługi (CTRL + Q)" action="#{naprawaBean.setOperacja('I')}" oncomplete="PF('dlgDodajNaprawa').show();" update=":formInsert" icon="ui-icon-plus" title="Dodaj naprawę" style="margin: 0 auto; margin-bottom: 10px; display: block; width: 20%; height: 45px;"/>
+            
+            <p:hotkey bind="ctrl+q" handler="PF('varBtnInsert').jq.click();" />
+            
+            <p:remoteCommand name="clearAttributesRC" actionListener="#{naprawaBean.clearAttributes}" />
+
+            <p:dataTable id="naprawy" 
+                         var="naprawa" 
+                         value="#{naprawaBean.naprawy}" 
+                         filteredValue="#{naprawaBean.filteredNaprawy}"
+                         widgetVar="naprawaTable"
+                         rowIndexVar="index"
+                         stickyHeader="false"
+                         rows="20"
+                         sortBy="#{naprawaBean.dtNaprawy}"
+                         paginator="true"
+                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                         paginatorPosition="bottom"
+                         currentPageReportTemplate="Rekordy {startRecord}-{endRecord} z {totalRecords}"
+                         rowsPerPageTemplate="10,20,30,50,100"
+                         emptyMessage="Nie znaleziono rekordów">           
+
+                <f:facet name="header">
+                    <h:outputText value="Dziennik sprzedaży usług [#{naprawaBean.kartotekaNaprawazNaglowek}]" style="font-size: large;" />
+                </f:facet>
+
+                <p:column headerText="Lp." style="width: 50px;">
+                    <h:outputText value="#{index + 1}" />
+                </p:column>
+                <p:column headerText="Id" filterBy="#{naprawa.id}" filterMatchMode="contains" style="width: 100px;">
+                    <h:outputText value="#{naprawa.id}" />
+                </p:column>                                
+                <p:column headerText="Klient" filterBy="#{naprawa.klient.etykieta}" filterMatchMode="contains" filterStyle="width: 200px;">
+                    <h:outputText value="#{naprawa.klient.etykieta}" />
+                </p:column>   
+                <p:column headerText="Osoba wykonująca" filterBy="#{naprawa.naprawiajacy.etykieta}" filterMatchMode="contains" filterStyle="width: 200px;">
+                    <h:outputText value="#{naprawa.naprawiajacy.etykieta}" />
+                </p:column>   
+                <p:column headerText="Salon" filterBy="#{naprawa.zaklad}" filterMatchMode="exact">
+                    <f:facet name="filter">                        
+                        <p:selectOneMenu id="zaklad" value="#{naprawaBean.naprawa.zaklad}" onchange="PF('naprawaTable').filter()">
+                            <f:converter converterId="zakladConverter" />
+                            <f:selectItem itemLabel="Wszystkie" itemValue="#{null}" noSelectionOption="true" />
+                            <f:selectItems value="#{zakladBean.lista}" var="zaklad" itemValue="#{zaklad}" itemLabel="#{zaklad.nazwa}" />
+                        </p:selectOneMenu>   
+                    </f:facet>
+                    <h:outputText value="#{naprawa.zaklad.nazwa}" />
+                </p:column>                      
+                <p:column headerText="Typ usługi" filterBy="#{naprawa.typUslugi}" filterMatchMode="exact">
+                    <f:facet name="filter">                        
+                        <p:selectOneMenu id="typ_uslugi" value="#{naprawaBean.naprawa.typUslugi}" onchange="PF('naprawaTable').filter()">
+                            <f:converter converterId="typUslugiConverter" />
+                            <f:selectItem itemLabel="Wszystkie" itemValue="#{null}" noSelectionOption="true" />
+                            <f:selectItems value="#{typUslugiBean.lista}" var="typ_uslugi" itemValue="#{typ_uslugi}" itemLabel="#{typ_uslugi.nazwa}" />
+                        </p:selectOneMenu>   
+                    </f:facet>
+                    <h:outputText value="#{naprawa.typUslugi.nazwa}" />
+                </p:column>      
+                <!--
+                <p:column headerText="Opis usługi" filterBy="#{naprawa.opis}" filterMatchMode="contains">
+                    <h:outputText value="#{naprawa.opis}" />
+                </p:column>                                  
+                -->
+                <p:column headerText="Data usługi" filterBy="#{naprawa.dataNaprawy}" filterFunction="#{naprawaBean.filterByDataNaprawy}">
+                    <f:facet name="filter">
+                        <p:calendar widgetVar="calDataOd" placeholder="Od:" showButtonPanel="true" navigator="false" locale="pl"  pattern="dd-MM-yyyy HH:mm:ss">
+                            <p:ajax event="dateSelect" oncomplete="PF('naprawaTable').filter()" update="formDataTable"/>
+                            <p:ajax event="change" oncomplete="PF('naprawaTable').filter()" update="formDataTable"/>
+                        </p:calendar>
+                    </f:facet>             
+                    <h:outputText value="#{naprawa.dataNaprawy}" >
+                        <f:convertDateTime type="date" timeZone="Europe/Warsaw" pattern="dd-MM-yyyy HH:mm:ss"/>
+                    </h:outputText>                    
+                </p:column>       
+                <!--
+                <p:column headerText="Sposób płatności" filterBy="#{naprawa.sposobPlatnosci}" filterMatchMode="exact">
+                    <f:facet name="filter">                        
+                        <p:selectOneMenu id="sp" value="#{naprawaBean.naprawa.sposobPlatnosci}" onchange="PF('naprawaTable').filter()">
+                            <f:converter converterId="sposobPlatnosciConverter" />
+                            <f:selectItem itemLabel="Wszystkie" itemValue="#{null}" noSelectionOption="true" />
+                            <f:selectItems value="#{sposobPlatnosciBean.lista}" var="sp" itemValue="#{sp}" itemLabel="#{sp.nazwa}" />
+                        </p:selectOneMenu>   
+                    </f:facet>
+                    <h:outputText value="#{naprawa.sposobPlatnosci.nazwa}" />
+                </p:column>   
+                -->
+                <p:column headerText="Wartość usługi [PLN]" filterBy="#{naprawa.wartoscNaprawy}" filterMatchMode="contains" filterStyle="width: 150px;">
+                    <h:outputText value="#{naprawa.wartoscNaprawy}" />
+                </p:column>      
+
+                <p:column headerText="Aktualizuj" style="width: 70px; text-align: center">
+                    <p:commandButton id="btnUpdate" action="#{naprawaBean.setOperacja('U')}" update=":formUpdate" oncomplete="PF('dlgNaprawaUpdate').show()" icon="ui-icon-refresh" title="Aktualizacja naprawy">
+                        <f:setPropertyActionListener value="#{naprawa}" target="#{naprawaBean.selectedNaprawa}"/>
+                    </p:commandButton>
+                </p:column>
+                <p:column headerText="Usuń" style="width: 40px; text-align: center">
+                    <p:commandButton id="btnDelete" update=":formDelete" oncomplete="PF('dlgNaprawaDelete').show()" icon="ui-icon-close" title="Usunięcie naprawy">
+                        <f:setPropertyActionListener value="#{naprawa}" target="#{naprawaBean.selectedNaprawa}"/>
+                    </p:commandButton>
+                </p:column>
+
+                <p:summaryRow>
+                    <p:column colspan="7" style="text-align:right">
+                        <h:outputText value="Razem:" />
+                    </p:column>
+                    <p:column>
+                        <h:outputText id="wartosc_napraw_razem" value="#{naprawaBean.wartoscNaprawRazem}">
+                            <!-- <f:convertNumber type="currency" currencySymbol="$" />  -->
+                        </h:outputText>
+                    </p:column>
+                </p:summaryRow>
+
+                <!--
+                <p:columnGroup type="footer">
+                    <p:row>
+                        <p:column colspan="6" style="text-align:right" footerText="Razem:" />
+                        <p:column footerText="5" />
+                    </p:row>
+                </p:columnGroup>
+                -->
+            </p:dataTable>
+        </h:form>
+
+        <p:dialog header="Dodaj usługę" id="dlgDodajNaprawa" widgetVar="dlgDodajNaprawa" appendTo="@(body)" showEffect="explode" hideEffect="clip" width="800" height="500">
+            <h:form id="formInsert">  
+                <p:tabView>
+                    <p:tab title="Dane">
+                        <p:panelGrid columns="2">                                                       
+
+                            <p:outputLabel for="klient" value="Klient:" />
+                            <h:panelGroup>                                
+                                <p:inputText id="klient" value="#{naprawaBean.naprawa.klient.etykieta}" required="false" disabled="true"/>                                
+                                <p:commandButton id="btnKlienci" type="button" onclick="PF('dlgKlienci').show();" icon="ui-icon-document" />
+                            </h:panelGroup>                                 
+
+                            <p:outputLabel for="osoba_naprawiajaca" value="Osoba wykonująca" />
+                            <p:selectOneMenu id="osoba_naprawiajaca" value="#{naprawaBean.naprawa.naprawiajacy}" required="true">
+                                <f:converter converterId="uzytkownikConverter" />
+                                <f:selectItem itemLabel="Wybierz" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{loginBean.uzytkownicy}" var="uzytkownik" itemValue="#{uzytkownik}" itemLabel="#{uzytkownik.etykieta}" />
+                            </p:selectOneMenu>
+
+                            <p:outputLabel for="zaklad" value="Salon:" />
+                            <p:selectOneMenu id="zaklad" value="#{naprawaBean.naprawa.zaklad}" required="true">
+                                <f:converter converterId="zakladConverter" />
+                                <f:selectItem itemLabel="Wybierz" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{zakladBean.lista}" var="zaklad" itemValue="#{zaklad}" itemLabel="#{zaklad.nazwa}" />
+                            </p:selectOneMenu>                                                             
+
+                            <p:outputLabel for="data_naprawy" value="Data usługi:" />
+                            <p:calendar id="data_naprawy" widgetVar="calDataNaprawy" value="#{naprawaBean.naprawa.dataNaprawy}" showOn="button" required="true" showButtonPanel="false" navigator="false" locale="pl" timeZone="Europe/Warsaw" pattern="dd-MM-yyyy HH:mm:ss" />
+
+                            <p:outputLabel for="sposob_plat" value="Sposób płatności:" />
+                            <p:selectOneMenu id="sposob_plat" value="#{naprawaBean.naprawa.sposobPlatnosci}" required="true">
+                                <f:converter converterId="sposobPlatnosciConverter" />
+                                <f:selectItem itemLabel="Wybierz" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{sposobPlatnosciBean.lista}" var="sposob_plat" itemValue="#{sposob_plat}" itemLabel="#{sposob_plat.nazwa}" />
+                            </p:selectOneMenu>  
+
+                            <p:outputLabel for="wartosc_naprawy" value="Wartość usługi [PLN]:" />
+                            <p:inputNumber id="wartosc_naprawy" value="#{naprawaBean.naprawa.wartoscNaprawy}" minValue="0" maxValue="99999" required="true" />  
+
+                        </p:panelGrid>
+                    </p:tab>
+                    <p:tab title="Usługa">
+                        <p:panelGrid columns="2">
+                            <p:outputLabel for="typ_uslugi" value="Typ usługi" />  
+                            <p:selectOneMenu id="typ_uslugi" value="#{naprawaBean.naprawa.typUslugi}" required="true">
+                                <f:converter converterId="typUslugiConverter" />
+                                <f:selectItem itemLabel="Wszystkie" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{typUslugiBean.lista}" var="typ_uslugi" itemValue="#{typ_uslugi}" itemLabel="#{typ_uslugi.nazwa}" />
+                            </p:selectOneMenu>   
+
+                            <p:outputLabel for="naprawa_opis" value="Opis usługi" />                            
+                            <p:inputTextarea id="naprawa_opis" value="#{naprawaBean.naprawa.opis}" required="false" rows="5" cols="30" autoResize="false" />
+                        </p:panelGrid>
+                    </p:tab>
+                </p:tabView>
+                <p:separator/>
+                <p:commandButton value="Zapisz" id="zapisz" actionListener="#{naprawaBean.btnCreateNaprawa}" update=":formDataTable:naprawy, dlgDodajNaprawa, :msgs" oncomplete="hideDialogOnSuccess(args, 'dlgDodajNaprawa', 'naprawaTable');" icon="ui-icon-circle-plus" ajax="true" />
+                <p:commandButton value="Anuluj" id="anuluj" onclick="PF('dlgDodajNaprawa').hide()" styleClass="ui-confirmdialog-no" icon="ui-icon-close"/>                 
+            </h:form>
+        </p:dialog>
+
+        <p:dialog header="Aktualizacja usługi" id="dlgNaprawaUpdate" widgetVar="dlgNaprawaUpdate" appendTo="@(body)" showEffect="explode" hideEffect="clip" width="800" height="500">
+            <h:form id="formUpdate">  
+                <p:tabView>
+                    <p:tab title="Dane">
+                        <p:panelGrid columns="2">      
+
+                            <p:outputLabel for="id" value="Id:" />
+                            <p:inputText id="id" value="#{naprawaBean.selectedNaprawa.id}" required="false" disabled="true"/>
+
+                            <p:outputLabel for="klient" value="Klient:" />
+                            <h:panelGroup>                                
+                                <p:inputText id="klient" value="#{naprawaBean.selectedNaprawa.klient.etykieta}" required="false" disabled="true"/>                                
+                                <p:commandButton id="btnKlienci" type="button" onclick="PF('dlgKlienci').show();" icon="ui-icon-document" />
+                            </h:panelGroup>                            
+
+                            <p:outputLabel for="osoba_naprawiajaca" value="Osoba wykonująca" />
+                            <p:selectOneMenu id="osoba_naprawiajaca" value="#{naprawaBean.selectedNaprawa.naprawiajacy}" required="true">
+                                <f:converter converterId="uzytkownikConverter" />
+                                <f:selectItem itemLabel="Wybierz" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{loginBean.uzytkownicy}" var="uzytkownik" itemValue="#{uzytkownik}" itemLabel="#{uzytkownik.etykieta}" />
+                            </p:selectOneMenu>
+
+                            <p:outputLabel for="zaklad" value="Salon:" />
+                            <p:selectOneMenu id="zaklad" value="#{naprawaBean.selectedNaprawa.zaklad}" required="true">
+                                <f:converter converterId="zakladConverter" />
+                                <f:selectItem itemLabel="Wybierz" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{zakladBean.lista}" var="zaklad" itemValue="#{zaklad}" itemLabel="#{zaklad.nazwa}" />
+                            </p:selectOneMenu>                                                             
+
+                            <p:outputLabel for="data_naprawy" value="Data usługi:" />
+                            <p:calendar id="data_naprawy" widgetVar="calDataNaprawy" value="#{naprawaBean.selectedNaprawa.dataNaprawy}" showOn="button" showButtonPanel="false" navigator="false" locale="pl" timeZone="Europe/Warsaw" pattern="dd-MM-yyyy HH:mm:ss" required="true" />
+
+                            <p:outputLabel for="sposob_plat" value="Sposób płatności:" />
+                            <p:selectOneMenu id="sposob_plat" value="#{naprawaBean.selectedNaprawa.sposobPlatnosci}" required="true">
+                                <f:converter converterId="sposobPlatnosciConverter" />
+                                <f:selectItem itemLabel="Wybierz" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{sposobPlatnosciBean.lista}" var="sposob_plat" itemValue="#{sposob_plat}" itemLabel="#{sposob_plat.nazwa}" />
+                            </p:selectOneMenu>  
+
+                            <p:outputLabel for="wartosc_naprawy" value="Wartość usługi [PLN]:" />
+                            <p:inputNumber id="wartosc_naprawy" value="#{naprawaBean.selectedNaprawa.wartoscNaprawy}" minValue="0" maxValue="99999" required="true" />  
+
+                        </p:panelGrid>
+                    </p:tab>
+                    <p:tab title="Usługa">
+                        <p:panelGrid columns="2">
+                            <p:outputLabel for="typ_uslugi" value="Typ usługi" />  
+                            <p:selectOneMenu id="typ_uslugi" value="#{naprawaBean.selectedNaprawa.typUslugi}" required="true">
+                                <f:converter converterId="typUslugiConverter" />
+                                <f:selectItem itemLabel="Wszystkie" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{typUslugiBean.lista}" var="typ_uslugi" itemValue="#{typ_uslugi}" itemLabel="#{typ_uslugi.nazwa}" />
+                            </p:selectOneMenu>   
+
+                            <p:outputLabel for="naprawa_opis" value="Opis usługi" />                            
+                            <p:inputTextarea id="naprawa_opis" value="#{naprawaBean.selectedNaprawa.opis}" required="false" rows="5" cols="30" autoResize="false" />
+                        </p:panelGrid>
+                    </p:tab>
+                </p:tabView>
+                <p:separator/>
+                <p:commandButton value="Zapisz" id="zapisz_upd" actionListener="#{naprawaBean.btnUpdateNaprawa}" oncomplete="hideDialogOnSuccess(args, 'dlgNaprawaUpdate', 'naprawaTable');" update=":formDataTable:naprawy, dlgNaprawaUpdate, :msgs" process="@form" icon="ui-icon-circle-plus" ajax="true" />
+                <p:commandButton value="Anuluj" id="anuluj_upd" onclick="PF('dlgNaprawaUpdate').hide()" styleClass="ui-confirmdialog-no" icon="ui-icon-close"/>                 
+            </h:form>
+        </p:dialog>
+
+        <p:confirmDialog header="Usunięcie usługi" widgetVar="dlgNaprawaDelete" id="dlgNaprawaDelete" appendTo="@(body)" message="Czy na pewno usunąć naprawę?" severity="alert" showEffect="fade" hideEffect="fade">                
+            <h:form id="formDelete">  
+                <p:commandButton id="tak" value="Tak" actionListener="#{naprawaBean.btnDeleteNaprawa}" update=":formDataTable:naprawy, :msgs" oncomplete="hideDialogOnSuccess(args, 'dlgNaprawaDelete', 'naprawaTable');" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" ajax="true" />
+                <p:commandButton id="nie" value="Nie" onclick="PF('dlgNaprawaDelete').hide()" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+            </h:form>
+        </p:confirmDialog>   
+        
+        <p:dialog header="Klienci" id="dlgKlienci" widgetVar="dlgKlienci" appendTo="@(body)" showEffect="explode" hideEffect="clip" width="800" height="500" resizable="true">
+                <h:form id="formDataTableKlienci">   
+                    <p:dataTable id="klienciLista" 
+                                 var="klient" 
+                                 value="#{klientBean.klienci}" 
+                                 filteredValue="#{klientBean.filteredKlienci}"
+                                 widgetVar="klientTable"
+                                 rowIndexVar="index"
+                                 rowKey="#{klient.id}"
+                                 selection="#{klientBean.selectedKlient}"
+                                 selectionMode="single"
+                                 stickyHeader="false"
+                                 scrollable="true"
+                                 scrollHeight="350"
+                                 rows="10"
+                                 paginator="true"
+                                 paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                 paginatorPosition="bottom"
+                                 currentPageReportTemplate="Rekordy {startRecord}-{endRecord} z {totalRecords}"
+                                 rowsPerPageTemplate="10,20,30,50,100"
+                                 emptyMessage="Nie znaleziono rekordów">           
+                        <p:column headerText="Lp." style="width: 50px;">
+                            <h:outputText value="#{index + 1}" />
+                        </p:column>
+                        <p:column headerText="Id" filterBy="#{klient.id}" filterMatchMode="contains" style="width: 100px;">
+                            <h:outputText value="#{klient.id}" />
+                        </p:column>
+                        <p:column headerText="Imię" filterBy="#{klient.imie}" filterMatchMode="contains">
+                            <h:outputText value="#{klient.imie}" />
+                        </p:column>
+                        <p:column headerText="Nazwisko" filterBy="#{klient.nazwisko}" filterMatchMode="contains">
+                            <h:outputText value="#{klient.nazwisko}" />
+                        </p:column>  
+                        <p:column headerText="Salon" filterBy="#{klient.zaklad}" filterMatchMode="exact">
+                            <f:facet name="filter">                        
+                                <p:selectOneMenu id="zaklad" value="#{klientBean.klient.zaklad}" onchange="PF('klientTable').filter()">
+                                    <f:converter converterId="zakladConverter" />
+                                    <f:selectItem itemLabel="Wszystkie" itemValue="#{null}" noSelectionOption="true" />
+                                    <f:selectItems value="#{zakladBean.lista}" var="zaklad" itemValue="#{zaklad}" itemLabel="#{zaklad.nazwa}" />
+                                </p:selectOneMenu>   
+                            </f:facet>
+                            <h:outputText value="#{klient.zaklad.nazwa}" />
+                        </p:column>
+                        
+                        <p:ajax event="rowSelect" listener="#{klientBean.rowSelectListener}"/>
+                    </p:dataTable>
+                    <p:separator/>
+                    <p:commandButton value="Wybierz" id="wybierzKlienta" action="#{naprawaBean.ustawKlienta(klientBean.klient)}" oncomplete="PF('dlgKlienci').hide();" update=":formInsert, :formUpdate, :msgs" icon="ui-icon-check" ajax="true" />                                        
+                    <p:commandButton value="Anuluj" id="anulujWyborKlienta" onclick="PF('dlgKlienci').hide()" styleClass="ui-confirmdialog-no" icon="ui-icon-close"/>     
+                </h:form>                
+            </p:dialog> 
+
+    </ui:define>
+
+</ui:composition>
